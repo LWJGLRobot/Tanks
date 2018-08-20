@@ -1,3 +1,20 @@
+/*******************************************************************************
+ * Copyright (C) 2018 Anvar Sultanbekov
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ ******************************************************************************/
 package ru.navarobot;
 
 import java.util.ArrayDeque;
@@ -8,7 +25,6 @@ import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
 import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
-import org.jbox2d.common.Rot;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
@@ -32,6 +48,10 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+
+	public static void main(String[] args) {
+		launch(args);
+	}
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -123,7 +143,7 @@ public class Main extends Application {
 			canvas.setHeight(scene.getHeight());
 		});
 
-		Object[] contactData = new Object[3];
+		Object[] contactData = new Object[2];
 
 		world.setContactListener(new ContactListener() {
 
@@ -145,20 +165,8 @@ public class Main extends Application {
 
 			@Override
 			public void beginContact(Contact contact) {
-				Body bodyA, bodyB;
-				if (contact.m_fixtureA.getBody().getUserData() instanceof Tank) {
-					bodyA = contact.m_fixtureA.getBody();
-					bodyB = contact.m_fixtureB.getBody();
-				} else if (contact.m_fixtureB.getBody().getUserData() instanceof Tank) {
-					bodyA = contact.m_fixtureB.getBody();
-					bodyB = contact.m_fixtureA.getBody();
-				} else {
-					return;
-				}
-
-				contactData[0] = bodyA;
-				contactData[1] = bodyB;
-				contactData[2] = contact.m_manifold.localPoint.clone();
+				contactData[0] = contact.m_fixtureA.getBody();
+				contactData[1] = contact.m_fixtureB.getBody();
 			}
 		});
 
@@ -167,7 +175,6 @@ public class Main extends Application {
 
 			@Override
 			public void handle(long now) {
-				canvas.getGraphicsContext2D().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
 				KeyCode keyCode = keyQueue.poll();
 				if (keyCode == KeyCode.R) {
@@ -235,12 +242,16 @@ public class Main extends Application {
 					bonus.updatePositionAndAngle(RATIO);
 				}
 
+				canvas.getGraphicsContext2D().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+				
 				if (world.getParticlePositionBuffer() != null) {
-					for (Vec2 particlePosition : world.getParticlePositionBuffer()) {
-						// canvas.getGraphicsContext2D()
-						// .setFill(new Color(Math.random(), Math.random(), Math.random(), 1));
-						canvas.getGraphicsContext2D().fillOval(particlePosition.x / RATIO, particlePosition.y / RATIO,
-								world.getParticleRadius() / RATIO, world.getParticleRadius() / RATIO);
+					for (int i = 0; i < world.getParticlePositionBuffer().length; i++) {
+						if ((world.getParticleFlagsBuffer()[i] | ParticleType.b2_zombieParticle) == world.getParticleFlagsBuffer()[i]) {
+							return;
+						}
+						canvas.getGraphicsContext2D().fillOval(world.getParticlePositionBuffer()[i].x / RATIO,
+								world.getParticlePositionBuffer()[i].y / RATIO, world.getParticleRadius() / RATIO,
+								world.getParticleRadius() / RATIO);
 					}
 				}
 
@@ -279,27 +290,35 @@ public class Main extends Application {
 			float RATIO) {
 		Body bodyA = (Body) data[0];
 		Body bodyB = (Body) data[1];
-		Vec2 point = (Vec2) data[2];
 
-		Tank tank = (Tank) bodyA.getUserData();
+		if (bodyB.getUserData() instanceof Bullet || bodyB.getUserData() instanceof Bonus) {
+			Body temp = bodyA;
+			bodyA = bodyB;
+			bodyB = temp;
+		} else if (!(bodyA.getUserData() instanceof Bullet) && !(bodyA.getUserData() instanceof Bonus)) {
+			return;
+		}
 
-		if (bodyB.getUserData() instanceof Bullet) {
-			Bullet bullet = (Bullet) bodyB.getUserData();
-			if (tank.damage(1)) {
-				bullet.getTank().increaseScore();
+		if (bodyA.getUserData() instanceof Bullet) {
+			Bullet bullet = (Bullet) bodyA.getUserData();
+			if (bodyB.getUserData() instanceof Tank) {
+				if (((Tank) bodyB.getUserData()).damage(1)) {
+					bullet.getTank().increaseScore();
+				}
 			}
+
 			destroyBullet(bullet, bullets, world, group);
-			Vec2 localPoint = new Vec2();
-			Rot.mulToOut(new Rot(tank.getBody().getAngle()), point, localPoint);
-			addParticleGroup(particleGroupList, localPoint.addLocal(tank.getBody().getPosition()), RATIO, world, group);
-		} else if (bodyB.getUserData() instanceof Bonus) {
-			Bonus bonus = (Bonus) bodyB.getUserData();
-			if (bonus.getType() == BonusType.FIREBOOST) {
-				tank.increaseBulletImpulse(0.01f);
-			} else if (bonus.getType() == BonusType.TANKBOOST) {
-				tank.increaseSpeed(0.1f);
+			addParticleGroup(particleGroupList, bodyA.getPosition(), RATIO, world, group);
+		} else if (bodyA.getUserData() instanceof Bonus) {
+			Bonus bonus = (Bonus) bodyA.getUserData();
+			if (bodyB.getUserData() instanceof Tank) {
+				if (bonus.getType() == BonusType.FIREBOOST) {
+					((Tank) bodyB.getUserData()).increaseBulletImpulse(0.01f);
+				} else if (bonus.getType() == BonusType.TANKBOOST) {
+					((Tank) bodyB.getUserData()).increaseSpeed(0.1f);
+				}
+				removeBonus(bonus, bonusList, group, world);
 			}
-			removeBonus(bonus, bonusList, group, world);
 		}
 	}
 
@@ -347,7 +366,7 @@ public class Main extends Application {
 
 	public void addRandomBoxes(ArrayList<Box> boxList, Group group, Scene scene, World world, Body frictionBox,
 			float RATIO) {
-		for (int i = 0; i < Math.random() * 5; i++) {
+		for (int i = 0; i < Math.random() * 5 * (scene.getWidth() * scene.getHeight()) / (640 * 480); i++) {
 			Box box = new Box((float) (Math.random() * scene.getWidth()), (float) (Math.random() * scene.getHeight()),
 					Images.BOX, world, frictionBox, RATIO);
 			boxList.add(box);
