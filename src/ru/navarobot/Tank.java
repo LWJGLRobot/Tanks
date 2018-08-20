@@ -19,25 +19,21 @@ public class Tank {
 	private float force, torque;
 	private Body body;
 	private int health;
-	private Text healthText;
+	private Text text;
 	private boolean died;
 	private float bulletImpulse;
+	private int score;
 
 	public Tank(float x, float y, Image image, World world, Body frictionBox, float RATIO) {
 
-		this.imageView = new ImageView(image);
+		text = new Text();
+
+		this.imageView = new ImageView();
+		restart(image);
 		imageView.setX(x - image.getWidth() / 2);
 		imageView.setY(y - image.getHeight() / 2);
 		imageView.setCache(true);
 		imageView.setSmooth(true);
-
-		force = 1.3f;
-		torque = 1.05f;
-
-		health = 10;
-		healthText = new Text(health + "");
-
-		bulletImpulse = 0.01f;
 
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.setType(BodyType.DYNAMIC);
@@ -50,6 +46,8 @@ public class Tank {
 		fixtureDef.setDensity(1f);
 		fixtureDef.setFriction(0.5f);
 		body.createFixture(fixtureDef);
+		// default
+		body.setUserData(this);
 
 		FrictionJointDef frictionJointDef = new FrictionJointDef();
 		frictionJointDef.initialize(body, frictionBox, body.getPosition());
@@ -57,7 +55,20 @@ public class Tank {
 		frictionJointDef.maxTorque = 1f;
 		world.createJoint(frictionJointDef);
 	}
-	
+
+	public void increaseScore() {
+		score++;
+		text.setText(health + " " + score);
+	}
+
+	public int getScore() {
+		return score;
+	}
+
+	public void increaseSpeed(float force) {
+		this.force += force;
+	}
+
 	public void increaseBulletImpulse(float impulse) {
 		bulletImpulse += impulse;
 	}
@@ -65,8 +76,11 @@ public class Tank {
 	public void restart(Image image) {
 		setDied(false);
 		getImageView().setImage(image);
+		force = 1.3f;
+		torque = 1.05f;
+		bulletImpulse = 0.01f;
 		health = 10;
-		healthText.setText(health + "");
+		text.setText(health + " " + score);
 	}
 
 	public boolean isDied() {
@@ -78,29 +92,36 @@ public class Tank {
 	}
 
 	public Text getText() {
-		return healthText;
+		return text;
 	}
 
-	public void damage(int damage) {
+	public boolean damage(int damage) {
 		health -= damage;
-		healthText.setText(health + "");
-		if (health < 0) {
+		text.setText(health + " " + score);
+		if (health < 0 && !died) {
 			died = true;
 			imageView.setImage(Images.POOP);
+			return true;
 		}
+		return false;
+	}
+
+	public Vec2 getBulletPosition(float k, float RATIO) {
+		return new Vec2(
+				(float) body.getPosition().x
+						+ (float) (Math.cos(body.getAngle()) * imageView.getImage().getWidth() * RATIO * k),
+				(float) body.getPosition().y
+						+ (float) (Math.sin(body.getAngle()) * imageView.getImage().getWidth() * RATIO * k));
 	}
 
 	public Bullet shoot(Color color, World world, Body frictionBox, float RATIO) {
 		if (died)
 			return null;
-		Bullet bullet = new Bullet(
-				(float) body.getPosition().x / RATIO
-						+ (float) (Math.cos(body.getAngle()) * imageView.getImage().getWidth()),
-				(float) body.getPosition().y / RATIO
-						+ (float) (Math.sin(body.getAngle()) * imageView.getImage().getWidth()),
+		Vec2 bulletPosition = getBulletPosition(0.7f, RATIO);
+		Bullet bullet = new Bullet(this, bulletPosition.x / RATIO, bulletPosition.y / RATIO,
 				new Vec2((float) (Math.cos(body.getAngle()) * bulletImpulse),
 						(float) (Math.sin(body.getAngle()) * bulletImpulse)),
-				color, world, frictionBox, RATIO);
+				body.getLinearVelocity(), color, world, frictionBox, RATIO);
 		return bullet;
 	}
 
@@ -109,8 +130,8 @@ public class Tank {
 	}
 
 	public void updatePositionAndAngle(float RATIO) {
-		healthText.setX(body.getPosition().x / RATIO);
-		healthText.setY(body.getPosition().y / RATIO - 30);
+		text.setX(body.getPosition().x / RATIO);
+		text.setY(body.getPosition().y / RATIO - 30);
 
 		imageView.setX(body.getPosition().x / RATIO - imageView.getImage().getWidth() / 2);
 		imageView.setY(body.getPosition().y / RATIO - imageView.getImage().getHeight() / 2);

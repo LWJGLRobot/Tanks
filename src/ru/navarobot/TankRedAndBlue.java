@@ -18,6 +18,8 @@ public class TankRedAndBlue extends Tank {
 			KeyCode[] keylayout) {
 		super(x, y, image, world, frictionBox, RATIO);
 
+		getBody().setUserData(this);
+
 		this.keylayout = keylayout;
 
 		controls = new boolean[] { false, false, false, false };

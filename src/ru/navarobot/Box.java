@@ -26,7 +26,6 @@ public class Box {
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.setType(BodyType.DYNAMIC);
 		bodyDef.setPosition(new Vec2(x * RATIO, y * RATIO));
-		bodyDef.setBullet(true);
 		body = world.createBody(bodyDef);
 		FixtureDef fixtureDef = new FixtureDef();
 		PolygonShape shape = new PolygonShape();

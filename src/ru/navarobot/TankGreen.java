@@ -15,7 +15,7 @@ public class TankGreen extends Tank {
 
 	public TankGreen(float x, float y, Image image, World world, Body frictionBox, float RATIO) {
 		super(x, y, image, world, frictionBox, RATIO);
-		
+		getBody().setUserData(this);
 		destPosition = new float[2];
 	}
 
