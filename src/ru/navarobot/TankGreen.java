@@ -40,7 +40,7 @@ public class TankGreen extends Tank {
 		destPosition = new float[2];
 	}
 
-	public Entity shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
+	public Object shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
 			float RATIO) {
 		if (isShooting) {
 			isShooting = false;

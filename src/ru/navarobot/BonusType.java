@@ -18,5 +18,5 @@
 package ru.navarobot;
 
 public enum BonusType {
-	FIREBOOST, TANKBOOST, MISSILEBONUS;
+	FIREBOOST, TANKBOOST, MISSILEBONUS, LASER;
 }

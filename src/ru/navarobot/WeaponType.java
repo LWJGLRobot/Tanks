@@ -18,5 +18,5 @@
 package ru.navarobot;
 
 public enum WeaponType {
-	DEFAULT, MISSILE;
+	DEFAULT, MISSILE, FIRE, LASER;
 }

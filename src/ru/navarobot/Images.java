@@ -44,4 +44,6 @@ public class Images {
 			Images.class.getClassLoader().getResourceAsStream("res/images/missileBonus.png"));
 	public static final Image MISSILE = new Image(
 			Images.class.getClassLoader().getResourceAsStream("res/images/missile.png"));
+	public static final Image LASER = new Image(
+			Images.class.getClassLoader().getResourceAsStream("res/images/laser.png"));
 }

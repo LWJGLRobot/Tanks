@@ -41,7 +41,7 @@ public class Bot extends Tank {
 		move = true;
 	}
 
-	public Entity shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
+	public Object shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
 			float RATIO) {
 		boolean findPlayer[] = new boolean[1];
 		world.raycast(new RayCastCallback() {

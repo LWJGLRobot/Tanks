@@ -39,8 +39,10 @@ public class Bonus extends Entity {
 			image = Images.FIREBOOST;
 		} else if (type == BonusType.TANKBOOST) {
 			image = Images.TANKBOOST;
-		} else if(type == BonusType.MISSILEBONUS) {
+		} else if (type == BonusType.MISSILEBONUS) {
 			image = Images.MISSILEBONUS;
+		} else if (type == BonusType.LASER) {
+			image = Images.LASER;
 		}
 
 		ImageView imageView = new ImageView(image);

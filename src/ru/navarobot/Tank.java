@@ -102,7 +102,7 @@ public class Tank extends Entity {
 		torque = 1.05f;
 		bulletImpulse = 0.01f;
 		missileImpulse = 0.03f;
-		health = 10;
+		health = 30;
 		text.setText(health + " " + score);
 	}
 
@@ -137,19 +137,29 @@ public class Tank extends Entity {
 						+ (float) (Math.sin(getBody().getAngle()) * getImageView().getImage().getWidth() * RATIO * k));
 	}
 
-	public Entity shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
+	public Object shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
 			float RATIO) {
 		if (died) {
 			return null;
 		}
-		Entity entity = null;
+		Object object = null;
 		if (weaponType == WeaponType.DEFAULT) {
-			entity = shootBullet(entityList, color, world, group, frictionBox, RATIO);
+			object = shootBullet(entityList, color, world, group, frictionBox, RATIO);
 		} else if (weaponType == WeaponType.MISSILE) {
-			entity = shootMissile(entityList, world, group, frictionBox, RATIO);
+			object = shootMissile(entityList, world, group, frictionBox, RATIO);
+		} else if (weaponType == WeaponType.FIRE) {
+
+		} else if (weaponType == WeaponType.LASER) {
+			object = shootLaser(world, RATIO);
 		}
 		weaponType = WeaponType.DEFAULT;
-		return entity;
+		return object;
+	}
+
+	public Laser shootLaser(World world, float RATIO) {
+		Laser laser = new Laser(getBody().getPosition(), getDirectionVector(100, RATIO));
+		laser.shoot(world);
+		return laser;
 	}
 
 	public Missile shootMissile(ArrayList<Entity> entityList, World world, Group group, Body frictionBox, float RATIO) {

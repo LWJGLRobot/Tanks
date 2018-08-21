@@ -85,6 +85,7 @@ public class Main extends Application {
 		ArrayList<Tank> tankList = new ArrayList<>();
 		ArrayList<Ammo> ammoList = new ArrayList<>();
 		ArrayList<Missile> missileList = new ArrayList<>();
+		ArrayList<Laser> laserList = new ArrayList<>();
 
 		TankRedAndBlue tankRed = new TankRedAndBlue(entityList, 200, 200, Images.TANKRED, world, group, frictionBox,
 				RATIO, new KeyCode[] { KeyCode.W, KeyCode.S, KeyCode.A, KeyCode.D, KeyCode.SPACE });
@@ -205,6 +206,7 @@ public class Main extends Application {
 
 			@Override
 			public void handle(long now) {
+				canvas.getGraphicsContext2D().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
 				KeyCode keyCode = keyQueue.poll();
 				if (keyCode == KeyCode.R) {
@@ -229,31 +231,35 @@ public class Main extends Application {
 					tankList.add(bot);
 				}
 
-				if (Math.random() < 0.001) {
+				if (Math.random() < 0.003) {
 					double rand = Math.random();
-					if (rand < 0.3) {
+					if (rand < 0.25) {
 						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
 								(float) (Math.random() * scene.getHeight()), world, group, BonusType.FIREBOOST, RATIO);
-					} else if (rand < 0.6) {
+					} else if (rand < 0.5) {
 						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
 								(float) (Math.random() * scene.getHeight()), world, group, BonusType.TANKBOOST, RATIO);
+					} else if (rand < 0.75) {
+						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
+								(float) (Math.random() * scene.getHeight()), world, group, BonusType.MISSILEBONUS,
+								RATIO);
 					} else {
 						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
-								(float) (Math.random() * scene.getHeight()), world, group, BonusType.MISSILEBONUS, RATIO);
+								(float) (Math.random() * scene.getHeight()), world, group, BonusType.LASER, RATIO);
 					}
 				}
 
 				processShoot(tankRed.shoot(entityList, Color.RED, world, group, frictionBox, RATIO), missileList,
-						ammoList);
+						ammoList, laserList, particleGroupList, RATIO, world, group);
 				processShoot(tankGreen.shoot(entityList, Color.GREEN, world, group, frictionBox, RATIO), missileList,
-						ammoList);
+						ammoList, laserList, particleGroupList, RATIO, world, group);
 				processShoot(tankBlue.shoot(entityList, Color.BLUE, world, group, frictionBox, RATIO), missileList,
-						ammoList);
+						ammoList, laserList, particleGroupList, RATIO, world, group);
 
 				for (Bot bot : botList) {
 					if (Math.random() < 0.3) {
 						processShoot(bot.shoot(entityList, Color.BLACK, world, group, frictionBox, RATIO), missileList,
-								ammoList);
+								ammoList, laserList, particleGroupList, RATIO, world, group);
 					}
 				}
 
@@ -267,10 +273,23 @@ public class Main extends Application {
 					bot.moveOneStep();
 				}
 
-				for (int i = 0; i < ammoList.size(); i++) {
+				for (int i = 0; i < ammoList.size();) {
 					if (ammoList.get(i).checkForLifeTime(entityList, group, world)) {
 						ammoList.remove(i);
 					} else {
+						i++;
+					}
+				}
+
+				for (int i = 0; i < laserList.size();) {
+					if (laserList.get(i).checkForLifeTime()) {
+						laserList.remove(i);
+					} else {
+						canvas.getGraphicsContext2D().setLineWidth(3);
+						canvas.getGraphicsContext2D().setStroke(Color.RED);
+						canvas.getGraphicsContext2D().strokeLine(laserList.get(i).getStart().x / RATIO,
+								laserList.get(i).getStart().y / RATIO, laserList.get(i).getEnd().x / RATIO,
+								laserList.get(i).getEnd().y / RATIO);
 						i++;
 					}
 				}
@@ -291,14 +310,13 @@ public class Main extends Application {
 					entity.updatePositionAndAngle(RATIO);
 				}
 
-				canvas.getGraphicsContext2D().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
 				if (world.getParticlePositionBuffer() != null) {
 					for (int i = 0; i < world.getParticlePositionBuffer().length; i++) {
 						if ((world.getParticleFlagsBuffer()[i] | ParticleType.b2_zombieParticle) == world
 								.getParticleFlagsBuffer()[i]) {
 							return;
 						}
+						canvas.getGraphicsContext2D().setFill(Color.BLACK);
 						canvas.getGraphicsContext2D().fillOval(world.getParticlePositionBuffer()[i].x / RATIO,
 								world.getParticlePositionBuffer()[i].y / RATIO, world.getParticleRadius() / RATIO,
 								world.getParticleRadius() / RATIO);
@@ -322,12 +340,17 @@ public class Main extends Application {
 		primaryStage.show();
 	}
 
-	public void processShoot(Entity entity, ArrayList<Missile> missileList, ArrayList<Ammo> ammoList) {
-		if (entity instanceof Missile) {
-			missileList.add((Missile) entity);
-			ammoList.add((Missile) entity);
-		} else if (entity instanceof Bullet) {
-			ammoList.add((Bullet) entity);
+	public void processShoot(Object object, ArrayList<Missile> missileList, ArrayList<Ammo> ammoList,
+			ArrayList<Laser> laserList, ArrayList<ParticleGroupWithLifeTime> particleGroupList, float RATIO,
+			World world, Group group) {
+		if (object instanceof Missile) {
+			missileList.add((Missile) object);
+			ammoList.add((Missile) object);
+		} else if (object instanceof Bullet) {
+			ammoList.add((Bullet) object);
+		} else if (object instanceof Laser) {
+			laserList.add((Laser) object);
+			addParticleGroup(particleGroupList, ((Laser) object).getEnd(), new Vec2(), 10, RATIO, world, group);
 		}
 	}
 
@@ -367,6 +390,8 @@ public class Main extends Application {
 					((Tank) bodyB.getUserData()).increaseSpeed(0.1f);
 				} else if (bonus.getType() == BonusType.MISSILEBONUS) {
 					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.MISSILE);
+				} else if (bonus.getType() == BonusType.LASER) {
+					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.LASER);
 				}
 				bonus.destroy(entityList, group, world);
 			}
@@ -378,6 +403,7 @@ public class Main extends Application {
 		ParticleGroupDef particleGroupDef = new ParticleGroupDef();
 		CircleShape shape = new CircleShape();
 		shape.setRadius(radius * RATIO);
+		// particleGroupDef.color = new ParticleColor(Color3f.RED);
 		particleGroupDef.shape = shape;
 		particleGroupDef.flags = ParticleType.b2_powderParticle;
 		particleGroupDef.position.set(position);
