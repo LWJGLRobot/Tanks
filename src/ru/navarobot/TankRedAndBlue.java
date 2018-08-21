@@ -17,9 +17,12 @@
  ******************************************************************************/
 package ru.navarobot;
 
+import java.util.ArrayList;
+
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.World;
 
+import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -31,9 +34,9 @@ public class TankRedAndBlue extends Tank {
 	private boolean[] controls;
 	private boolean isShooting;
 
-	public TankRedAndBlue(float x, float y, Image image, World world, Body frictionBox, float RATIO,
-			KeyCode[] keylayout) {
-		super(x, y, image, world, frictionBox, RATIO);
+	public TankRedAndBlue(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group,
+			Body frictionBox, float RATIO, KeyCode[] keylayout) {
+		super(entityList, x, y, image, world, group, frictionBox, RATIO);
 
 		getBody().setUserData(this);
 
@@ -71,9 +74,14 @@ public class TankRedAndBlue extends Tank {
 
 	}
 
-	public Bullet shootOnce(Color color, World world, Body frictionBox, float RATIO) {
-		isShooting = false;
-		return shoot(color, world, frictionBox, RATIO);
+	public Entity shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
+			float RATIO) {
+		if (isShooting) {
+			isShooting = false;
+			return super.shoot(entityList, color, world, group, frictionBox, RATIO);
+		} else {
+			return null;
+		}
 	}
 
 	public void moveOneStep() {

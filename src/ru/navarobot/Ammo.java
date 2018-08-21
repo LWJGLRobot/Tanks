@@ -17,6 +17,30 @@
  ******************************************************************************/
 package ru.navarobot;
 
-public enum BonusType {
-	FIREBOOST, TANKBOOST, MISSILEBONUS;
+import java.util.ArrayList;
+
+import org.jbox2d.dynamics.World;
+
+import javafx.scene.Group;
+
+public class Ammo extends Entity {
+	private long time;
+	private Tank tank;
+
+	public void initAmmo(Tank tank) {
+		this.tank = tank;
+		time = System.currentTimeMillis();
+	}
+
+	public boolean checkForLifeTime(ArrayList<Entity> entityList, Group group, World world) {
+		if (System.currentTimeMillis() - time > 10000) {
+			destroy(entityList, group, world);
+			return true;
+		}
+		return false;
+	}
+
+	public Tank getTank() {
+		return tank;
+	}
 }

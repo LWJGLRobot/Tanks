@@ -17,6 +17,6 @@
  ******************************************************************************/
 package ru.navarobot;
 
-public enum BonusType {
-	FIREBOOST, TANKBOOST, MISSILEBONUS;
+public enum WeaponType {
+	DEFAULT, MISSILE;
 }

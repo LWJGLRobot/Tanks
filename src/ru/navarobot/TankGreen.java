@@ -17,9 +17,12 @@
  ******************************************************************************/
 package ru.navarobot;
 
+import java.util.ArrayList;
+
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.World;
 
+import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -30,15 +33,21 @@ public class TankGreen extends Tank {
 	private float destPosition[];
 	private boolean isShooting;
 
-	public TankGreen(float x, float y, Image image, World world, Body frictionBox, float RATIO) {
-		super(x, y, image, world, frictionBox, RATIO);
+	public TankGreen(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group,
+			Body frictionBox, float RATIO) {
+		super(entityList, x, y, image, world, group, frictionBox, RATIO);
 		getBody().setUserData(this);
 		destPosition = new float[2];
 	}
 
-	public Bullet shootOnce(Color color, World world, Body frictionBox, float RATIO) {
-		isShooting = false;
-		return shoot(color, world, frictionBox, RATIO);
+	public Entity shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
+			float RATIO) {
+		if (isShooting) {
+			isShooting = false;
+			return super.shoot(entityList, color, world, group, frictionBox, RATIO);
+		} else {
+			return null;
+		}
 	}
 
 	public void moveOneStep(float RATIO) {
@@ -58,7 +67,7 @@ public class TankGreen extends Tank {
 			if (event.getButton() == MouseButton.PRIMARY) {
 				setShooting(true);
 			}
-		} else if(event.getEventType() == MouseEvent.MOUSE_MOVED) {
+		} else if (event.getEventType() == MouseEvent.MOUSE_MOVED) {
 			destPosition[0] = (float) event.getSceneX();
 			destPosition[1] = (float) event.getSceneY();
 		}

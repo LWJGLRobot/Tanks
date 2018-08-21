@@ -17,12 +17,15 @@
  ******************************************************************************/
 package ru.navarobot;
 
+import java.util.ArrayList;
+
 import org.jbox2d.callbacks.RayCastCallback;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.Fixture;
 import org.jbox2d.dynamics.World;
 
+import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
@@ -31,12 +34,15 @@ public class Bot extends Tank {
 	private boolean rotate;
 	private boolean move;
 
-	public Bot(float x, float y, Image image, World world, Body frictionBox, float RATIO) {
-		super(x, y, image, world, frictionBox, RATIO);
+	public Bot(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group, Body frictionBox,
+			float RATIO) {
+		super(entityList, x, y, image, world, group, frictionBox, RATIO);
+		getBody().setUserData(this);
 		move = true;
 	}
 
-	public Bullet shootToPlayer(Color color, World world, Body frictionBox, float RATIO) {
+	public Entity shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
+			float RATIO) {
 		boolean findPlayer[] = new boolean[1];
 		world.raycast(new RayCastCallback() {
 
@@ -48,9 +54,9 @@ public class Bot extends Tank {
 				}
 				return 0;
 			}
-		}, getBody().getPosition(), getBulletPosition(10, RATIO));
+		}, getBody().getPosition(), getDirectionVector(10, RATIO));
 		if (findPlayer[0]) {
-			return shoot(color, world, frictionBox, RATIO);
+			return super.shoot(entityList, color, world, group, frictionBox, RATIO);
 		} else {
 			return null;
 		}
