@@ -34,8 +34,8 @@ public class Missile extends Ammo {
 
 	private float force;
 
-	public Missile(ArrayList<Entity> entityList, Tank tank, float x, float y, Vec2 impulse, Vec2 tankVelocity,
-			Image image, World world, Body frictionBox, Group group, float RATIO) {
+	public Missile(ArrayList<Entity> entityList, Tank tank, float x, float y, Vec2 velocity, Image image, World world,
+			Body frictionBox, Group group, float RATIO) {
 
 		ImageView imageView = new ImageView(image);
 		imageView.setX(x - image.getWidth() / 2);
@@ -46,7 +46,7 @@ public class Missile extends Ammo {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox((float) image.getWidth() * RATIO / 2, (float) image.getHeight() * RATIO / 2);
 
-		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 0.3f, 0.1f, true, group, RATIO);
+		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 0.3f, 0.1f, true, group, 0, RATIO);
 
 		getBody().setUserData(this);
 
@@ -56,8 +56,7 @@ public class Missile extends Ammo {
 		frictionJointDef.maxTorque = 0.01f;
 		world.createJoint(frictionJointDef);
 
-		getBody().applyLinearImpulse(impulse.addLocal(tankVelocity.mul(getBody().getMass())), getBody().getPosition(),
-				true);
+		getBody().applyLinearImpulse(velocity.mul(getBody().getMass()), getBody().getPosition(), true);
 
 		initAmmo(tank);
 

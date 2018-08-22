@@ -32,15 +32,15 @@ import javafx.scene.shape.Circle;
 
 public class Bullet extends Ammo {
 
-	public Bullet(ArrayList<Entity> entityList, Tank tank, float x, float y, Vec2 impulse, Vec2 tankVelocity,
-			Color color, World world, Group group, Body frictionBox, float RATIO) {
+	public Bullet(ArrayList<Entity> entityList, Tank tank, float x, float y, Vec2 velocity, Color color, World world,
+			Group group, Body frictionBox, float restitution, float RATIO) {
 
 		Circle circle = new Circle(x, y, 5, color);
 
 		CircleShape shape = new CircleShape();
 		shape.setRadius(5 * RATIO);
 
-		initEntity(entityList, circle, BodyType.DYNAMIC, x, y, world, shape, 0.3f, 0.1f, true, group, RATIO);
+		initEntity(entityList, circle, BodyType.DYNAMIC, x, y, world, shape, 0.3f, 0.1f, true, group, restitution, RATIO);
 
 		getBody().setUserData(this);
 
@@ -50,8 +50,7 @@ public class Bullet extends Ammo {
 		frictionJointDef.maxTorque = 0.01f;
 		world.createJoint(frictionJointDef);
 
-		getBody().applyLinearImpulse(impulse.addLocal(tankVelocity.mul(getBody().getMass())), getBody().getPosition(),
-				true);
+		getBody().applyLinearImpulse(velocity.mul(getBody().getMass()), getBody().getPosition(), true);
 
 		initAmmo(tank);
 	}

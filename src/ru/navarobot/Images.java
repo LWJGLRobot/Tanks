@@ -19,31 +19,15 @@ package ru.navarobot;
 
 import javafx.scene.image.Image;
 
-public class Images {
-	public static final Image POOP = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/poop.png"));
-	public static final Image TANKRED = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/tankRed.png"));
-	public static final Image TANKGREEN = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/tankGreen.png"));
-	public static final Image TANKBLUE = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/tankBlue.png"));
-	public static final Image TANKBOT = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/tankBot.png"));
-	public static final Image BACKGROUND = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/background.png"));
-	public static final Image CURSOR = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/cursor.png"));
-	public static final Image BOX = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/box.png"));
-	public static final Image FIREBOOST = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/fireboost.png"));
-	public static final Image TANKBOOST = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/tankboost.png"));
-	public static final Image MISSILEBONUS = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/missileBonus.png"));
-	public static final Image MISSILE = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/missile.png"));
-	public static final Image LASER = new Image(
-			Images.class.getClassLoader().getResourceAsStream("res/images/laser.png"));
+public enum Images {
+	POOP("poop.png"), TANKRED("tankRed.png"), TANKGREEN("tankGreen.png"), TANKBLUE("tankBlue.png"),
+	TANKBOT("tankBot.png"), BACKGROUND("background.png"), CURSOR("cursor.png"), BOX("box.png"),
+	FIREBOOST("fireboost.png"), TANKBOOST("tankboost.png"), MISSILEBONUS("missileBonus.png"), MISSILE("missile.png"),
+	LASER("laser.png"), SUPERLASER("superLaser.png");
+
+	public final Image image;
+
+	Images(String fileName) {
+		this.image = new Image(Images.class.getClassLoader().getResourceAsStream("res/images/" + fileName));
+	}
 }

@@ -37,8 +37,7 @@ public class Tank extends Entity {
 	private int health;
 	private Text text;
 	private boolean died;
-	private float bulletImpulse;
-	private float missileImpulse;
+	private float ammoVelocity;
 	private int score;
 	private WeaponType weaponType;
 
@@ -57,7 +56,7 @@ public class Tank extends Entity {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox((float) image.getWidth() * RATIO / 2, (float) image.getHeight() * RATIO / 2);
 
-		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 1, 0.5f, false, group, RATIO);
+		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 1, 0.5f, false, group, 0, RATIO);
 
 		FrictionJointDef frictionJointDef = new FrictionJointDef();
 		frictionJointDef.initialize(getBody(), frictionBox, getBody().getPosition());
@@ -91,7 +90,7 @@ public class Tank extends Entity {
 	}
 
 	public void increaseBulletImpulse(float impulse) {
-		bulletImpulse += impulse;
+		ammoVelocity += impulse;
 	}
 
 	public void restart(Image image) {
@@ -100,8 +99,7 @@ public class Tank extends Entity {
 		getImageView().setImage(image);
 		force = 1.3f;
 		torque = 1.05f;
-		bulletImpulse = 0.01f;
-		missileImpulse = 0.03f;
+		ammoVelocity = 5f;
 		health = 30;
 		text.setText(health + " " + score);
 	}
@@ -123,7 +121,7 @@ public class Tank extends Entity {
 		text.setText(health + " " + score);
 		if (health < 0 && !died) {
 			died = true;
-			getImageView().setImage(Images.POOP);
+			getImageView().setImage(Images.POOP.image);
 			return true;
 		}
 		return false;
@@ -144,20 +142,29 @@ public class Tank extends Entity {
 		}
 		Object object = null;
 		if (weaponType == WeaponType.DEFAULT) {
-			object = shootBullet(entityList, color, world, group, frictionBox, RATIO);
+			if (Math.random() < 0.3) {
+				//soft bullet
+				object = shootBullet(entityList, Color.PURPLE, world, group, frictionBox, 1, RATIO);
+			} else {
+				object = shootBullet(entityList, color, world, group, frictionBox, 0, RATIO);
+			}
 		} else if (weaponType == WeaponType.MISSILE) {
 			object = shootMissile(entityList, world, group, frictionBox, RATIO);
 		} else if (weaponType == WeaponType.FIRE) {
 
 		} else if (weaponType == WeaponType.LASER) {
-			object = shootLaser(world, RATIO);
+			object = shootLaser(world, false, RATIO);
+		} else if (weaponType == WeaponType.SOFTBULLET) {
+			object = shootBullet(entityList, Color.PURPLE, world, group, frictionBox, 1, RATIO);
+		} else if (weaponType == WeaponType.SUPERLASER) {
+			object = shootLaser(world, true, RATIO);
 		}
 		weaponType = WeaponType.DEFAULT;
 		return object;
 	}
 
-	public Laser shootLaser(World world, float RATIO) {
-		Laser laser = new Laser(getBody().getPosition(), getDirectionVector(100, RATIO));
+	public Laser shootLaser(World world, boolean superLaser, float RATIO) {
+		Laser laser = new Laser(getBody().getPosition(), getDirectionVector(100, RATIO), superLaser);
 		laser.shoot(world);
 		return laser;
 	}
@@ -165,21 +172,21 @@ public class Tank extends Entity {
 	public Missile shootMissile(ArrayList<Entity> entityList, World world, Group group, Body frictionBox, float RATIO) {
 		Vec2 missilePosition = getDirectionVector(0.9f, RATIO);
 		Missile missile = new Missile(entityList, this, missilePosition.x / RATIO, missilePosition.y / RATIO,
-				new Vec2((float) (Math.cos(getBody().getAngle()) * missileImpulse),
-						(float) (Math.sin(getBody().getAngle()) * missileImpulse)),
-				getBody().getLinearVelocity(), Images.MISSILE, world, frictionBox, group, RATIO);
+				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
+						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
+				Images.MISSILE.image, world, frictionBox, group, RATIO);
 		return missile;
 	}
 
 	public Bullet shootBullet(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
-			float RATIO) {
+			float restitution, float RATIO) {
 		if (died)
 			return null;
 		Vec2 bulletPosition = getDirectionVector(0.7f, RATIO);
 		Bullet bullet = new Bullet(entityList, this, bulletPosition.x / RATIO, bulletPosition.y / RATIO,
-				new Vec2((float) (Math.cos(getBody().getAngle()) * bulletImpulse),
-						(float) (Math.sin(getBody().getAngle()) * bulletImpulse)),
-				getBody().getLinearVelocity(), color, world, group, frictionBox, RATIO);
+				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
+						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
+				color, world, group, frictionBox, restitution, RATIO);
 		return bullet;
 	}
 

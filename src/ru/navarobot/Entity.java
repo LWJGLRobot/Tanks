@@ -35,7 +35,7 @@ public class Entity {
 	private Body body;
 
 	public void initEntity(ArrayList<Entity> entityList, Node node, BodyType type, float x, float y, World world, Shape shape,
-			float density, float friction, boolean isBullet, Group group, float RATIO) {
+			float density, float friction, boolean isBullet, Group group, float restitution, float RATIO) {
 		this.node = node;
 		if (node != null) {
 			group.getChildren().add(node);
@@ -47,6 +47,7 @@ public class Entity {
 		bodyDef.setBullet(isBullet);
 		body = world.createBody(bodyDef);
 		FixtureDef fixtureDef = new FixtureDef();
+		fixtureDef.setRestitution(restitution);
 		fixtureDef.setShape(shape);
 		fixtureDef.setDensity(density);
 		fixtureDef.setFriction(friction);

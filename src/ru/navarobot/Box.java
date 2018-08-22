@@ -42,7 +42,7 @@ public class Box extends Entity {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox((float) image.getWidth() * RATIO / 2, (float) image.getHeight() * RATIO / 2);
 
-		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 2, 0.5f, false, group, RATIO);
+		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 2, 0.5f, false, group, 0, RATIO);
 
 		FrictionJointDef frictionJointDef = new FrictionJointDef();
 		frictionJointDef.initialize(getBody(), frictionBox, getBody().getPosition());

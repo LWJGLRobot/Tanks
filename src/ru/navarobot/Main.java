@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
-import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
@@ -32,7 +31,6 @@ import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.contacts.Contact;
-import org.jbox2d.particle.ParticleGroupDef;
 import org.jbox2d.particle.ParticleType;
 
 import javafx.animation.AnimationTimer;
@@ -75,7 +73,7 @@ public class Main extends Application {
 			frictionBox.createFixture(fixtureDef);
 		}
 
-		ImageView background = new ImageView(Images.BACKGROUND);
+		ImageView background = new ImageView(Images.BACKGROUND.image);
 		group.getChildren().add(background);
 
 		ArrayList<Entity> entityList = new ArrayList<>();
@@ -87,16 +85,18 @@ public class Main extends Application {
 		ArrayList<Missile> missileList = new ArrayList<>();
 		ArrayList<Laser> laserList = new ArrayList<>();
 
-		TankRedAndBlue tankRed = new TankRedAndBlue(entityList, 200, 200, Images.TANKRED, world, group, frictionBox,
-				RATIO, new KeyCode[] { KeyCode.W, KeyCode.S, KeyCode.A, KeyCode.D, KeyCode.SPACE });
-		TankGreen tankGreen = new TankGreen(entityList, 260, 100, Images.TANKGREEN, world, group, frictionBox, RATIO);
-		TankRedAndBlue tankBlue = new TankRedAndBlue(entityList, 100, 260, Images.TANKBLUE, world, group, frictionBox,
-				RATIO, new KeyCode[] { KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT, KeyCode.P });
+		TankRedAndBlue tankRed = new TankRedAndBlue(entityList, 200, 200, Images.TANKRED.image, world, group,
+				frictionBox, RATIO, new KeyCode[] { KeyCode.W, KeyCode.S, KeyCode.A, KeyCode.D, KeyCode.SPACE });
+		TankGreen tankGreen = new TankGreen(entityList, 260, 100, Images.TANKGREEN.image, world, group, frictionBox,
+				RATIO);
+		TankRedAndBlue tankBlue = new TankRedAndBlue(entityList, 100, 260, Images.TANKBLUE.image, world, group,
+				frictionBox, RATIO, new KeyCode[] { KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT, KeyCode.P });
 		tankList.add(tankRed);
 		tankList.add(tankGreen);
 		tankList.add(tankBlue);
 
-		scene.setCursor(new ImageCursor(Images.CURSOR, Images.CURSOR.getWidth() / 2, Images.CURSOR.getHeight() / 2));
+		scene.setCursor(new ImageCursor(Images.CURSOR.image, Images.CURSOR.image.getWidth() / 2,
+				Images.CURSOR.image.getHeight() / 2));
 
 		ArrayDeque<KeyCode> keyQueue = new ArrayDeque<>();
 
@@ -210,9 +210,9 @@ public class Main extends Application {
 
 				KeyCode keyCode = keyQueue.poll();
 				if (keyCode == KeyCode.R) {
-					tankRed.restart(Images.TANKRED);
-					tankGreen.restart(Images.TANKGREEN);
-					tankBlue.restart(Images.TANKBLUE);
+					tankRed.restart(Images.TANKRED.image);
+					tankGreen.restart(Images.TANKGREEN.image);
+					tankBlue.restart(Images.TANKBLUE.image);
 					for (Box box : boxList) {
 						box.destroy(entityList, group, world);
 					}
@@ -225,27 +225,30 @@ public class Main extends Application {
 					botList.clear();
 				} else if (keyCode == KeyCode.B) {
 					Bot bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
-							(float) (Math.random() * scene.getHeight()), Images.TANKBOT, world, group, frictionBox,
-							RATIO);
+							(float) (Math.random() * scene.getHeight()), Images.TANKBOT.image, world, group,
+							frictionBox, RATIO);
 					botList.add(bot);
 					tankList.add(bot);
 				}
 
-				if (Math.random() < 0.003) {
+				if (Math.random() < 0.005) {
 					double rand = Math.random();
-					if (rand < 0.25) {
+					if (rand < 0.2) {
 						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
 								(float) (Math.random() * scene.getHeight()), world, group, BonusType.FIREBOOST, RATIO);
-					} else if (rand < 0.5) {
+					} else if (rand < 0.4) {
 						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
 								(float) (Math.random() * scene.getHeight()), world, group, BonusType.TANKBOOST, RATIO);
-					} else if (rand < 0.75) {
+					} else if (rand < 0.6) {
 						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
 								(float) (Math.random() * scene.getHeight()), world, group, BonusType.MISSILEBONUS,
 								RATIO);
-					} else {
+					} else if (rand < 0.8) {
 						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
 								(float) (Math.random() * scene.getHeight()), world, group, BonusType.LASER, RATIO);
+					} else {
+						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
+								(float) (Math.random() * scene.getHeight()), world, group, BonusType.SUPERLASER, RATIO);
 					}
 				}
 
@@ -286,7 +289,11 @@ public class Main extends Application {
 						laserList.remove(i);
 					} else {
 						canvas.getGraphicsContext2D().setLineWidth(3);
-						canvas.getGraphicsContext2D().setStroke(Color.RED);
+						if (!laserList.get(i).isSuperLaser()) {
+							canvas.getGraphicsContext2D().setStroke(Color.RED);
+						} else {
+							canvas.getGraphicsContext2D().setStroke(Color.DARKRED);
+						}
 						canvas.getGraphicsContext2D().strokeLine(laserList.get(i).getStart().x / RATIO,
 								laserList.get(i).getStart().y / RATIO, laserList.get(i).getEnd().x / RATIO,
 								laserList.get(i).getEnd().y / RATIO);
@@ -314,7 +321,7 @@ public class Main extends Application {
 					for (int i = 0; i < world.getParticlePositionBuffer().length; i++) {
 						if ((world.getParticleFlagsBuffer()[i] | ParticleType.b2_zombieParticle) == world
 								.getParticleFlagsBuffer()[i]) {
-							return;
+							continue;
 						}
 						canvas.getGraphicsContext2D().setFill(Color.BLACK);
 						canvas.getGraphicsContext2D().fillOval(world.getParticlePositionBuffer()[i].x / RATIO,
@@ -350,7 +357,10 @@ public class Main extends Application {
 			ammoList.add((Bullet) object);
 		} else if (object instanceof Laser) {
 			laserList.add((Laser) object);
-			addParticleGroup(particleGroupList, ((Laser) object).getEnd(), new Vec2(), 10, RATIO, world, group);
+			particleGroupList.add(new ParticleGroupWithLifeTime(((Laser) object).getEnd(), new Vec2(), 10, RATIO, world,
+					group, ParticleType.b2_powderParticle));
+		} else if (object instanceof ParticleGroupWithLifeTime) {
+			particleGroupList.add((ParticleGroupWithLifeTime) object);
 		}
 	}
 
@@ -366,7 +376,8 @@ public class Main extends Application {
 				if (((Tank) bodyB.getUserData()).damage(5)) {
 					missile.getTank().increaseScore();
 				}
-				addParticleGroup(particleGroupList, bodyA.getPosition(), (Vec2) data[2], 10, RATIO, world, group);
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), (Vec2) data[2], 10, RATIO,
+						world, group, ParticleType.b2_powderParticle));
 				missile.destroy(entityList, group, world);
 				ammoList.remove(missile);
 				missileList.remove(missile);
@@ -377,45 +388,40 @@ public class Main extends Application {
 				if (((Tank) bodyB.getUserData()).damage(1)) {
 					bullet.getTank().increaseScore();
 				}
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), (Vec2) data[2], 5, RATIO,
+						world, group, ParticleType.b2_powderParticle));
+				bullet.destroy(entityList, group, world);
+				ammoList.remove(bullet);
+			} else if (bodyA.getFixtureList().getRestitution() == 0) {
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), (Vec2) data[2], 5, RATIO,
+						world, group, ParticleType.b2_powderParticle));
+				bullet.destroy(entityList, group, world);
+				ammoList.remove(bullet);
 			}
-			addParticleGroup(particleGroupList, bodyA.getPosition(), (Vec2) data[2], 5, RATIO, world, group);
-			bullet.destroy(entityList, group, world);
-			ammoList.remove(bullet);
 		} else if (bodyA.getUserData() instanceof Bonus) {
 			Bonus bonus = (Bonus) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
 				if (bonus.getType() == BonusType.FIREBOOST) {
-					((Tank) bodyB.getUserData()).increaseBulletImpulse(0.01f);
+					((Tank) bodyB.getUserData()).increaseBulletImpulse(1);
 				} else if (bonus.getType() == BonusType.TANKBOOST) {
 					((Tank) bodyB.getUserData()).increaseSpeed(0.1f);
 				} else if (bonus.getType() == BonusType.MISSILEBONUS) {
 					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.MISSILE);
 				} else if (bonus.getType() == BonusType.LASER) {
 					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.LASER);
+				} else if (bonus.getType() == BonusType.SUPERLASER) {
+					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.SUPERLASER);
 				}
 				bonus.destroy(entityList, group, world);
 			}
 		}
 	}
 
-	public void addParticleGroup(ArrayList<ParticleGroupWithLifeTime> particleGroupList, Vec2 position,
-			Vec2 linearVelocity, float radius, float RATIO, World world, Group group) {
-		ParticleGroupDef particleGroupDef = new ParticleGroupDef();
-		CircleShape shape = new CircleShape();
-		shape.setRadius(radius * RATIO);
-		// particleGroupDef.color = new ParticleColor(Color3f.RED);
-		particleGroupDef.shape = shape;
-		particleGroupDef.flags = ParticleType.b2_powderParticle;
-		particleGroupDef.position.set(position);
-		particleGroupDef.linearVelocity.set(linearVelocity);
-		particleGroupList.add(new ParticleGroupWithLifeTime(world.createParticleGroup(particleGroupDef)));
-	}
-
 	public void addRandomBoxes(ArrayList<Entity> entityList, ArrayList<Box> boxList, Group group, Scene scene,
 			World world, Body frictionBox, float RATIO) {
 		for (int i = 0; i < Math.random() * 5 * (scene.getWidth() * scene.getHeight()) / (640 * 480); i++) {
 			boxList.add(new Box(entityList, (float) (Math.random() * scene.getWidth()),
-					(float) (Math.random() * scene.getHeight()), Images.BOX, world, group, frictionBox, RATIO));
+					(float) (Math.random() * scene.getHeight()), Images.BOX.image, world, group, frictionBox, RATIO));
 		}
 	}
 
@@ -435,7 +441,7 @@ public class Main extends Application {
 
 	public Entity createBorder(ArrayList<Entity> entityList, World world, Group group, float RATIO) {
 		Entity entity = new Entity();
-		entity.initEntity(entityList, null, BodyType.STATIC, 0, 0, world, new PolygonShape(), 1, 0.5f, false, group,
+		entity.initEntity(entityList, null, BodyType.STATIC, 0, 0, world, new PolygonShape(), 1, 0.5f, false, group, 0,
 				RATIO);
 		return entity;
 	}

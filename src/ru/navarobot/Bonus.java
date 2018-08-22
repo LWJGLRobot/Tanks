@@ -36,13 +36,15 @@ public class Bonus extends Entity {
 		this.type = type;
 		Image image = null;
 		if (type == BonusType.FIREBOOST) {
-			image = Images.FIREBOOST;
+			image = Images.FIREBOOST.image;
 		} else if (type == BonusType.TANKBOOST) {
-			image = Images.TANKBOOST;
+			image = Images.TANKBOOST.image;
 		} else if (type == BonusType.MISSILEBONUS) {
-			image = Images.MISSILEBONUS;
+			image = Images.MISSILEBONUS.image;
 		} else if (type == BonusType.LASER) {
-			image = Images.LASER;
+			image = Images.LASER.image;
+		} else if (type == BonusType.SUPERLASER) {
+			image = Images.SUPERLASER.image;
 		}
 
 		ImageView imageView = new ImageView(image);
@@ -54,7 +56,7 @@ public class Bonus extends Entity {
 		CircleShape shape = new CircleShape();
 		shape.setRadius((float) image.getWidth() * RATIO / 2);
 
-		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 0.1f, 0.1f, false, group, RATIO);
+		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 0.1f, 0.1f, false, group, 0, RATIO);
 
 		getBody().setUserData(this);
 	}
