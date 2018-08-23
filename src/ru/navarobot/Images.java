@@ -23,7 +23,7 @@ public enum Images {
 	POOP("poop.png"), TANKRED("tankRed.png"), TANKGREEN("tankGreen.png"), TANKBLUE("tankBlue.png"),
 	TANKBOT("tankBot.png"), BACKGROUND("background.png"), CURSOR("cursor.png"), BOX("box.png"),
 	FIREBOOST("fireboost.png"), TANKBOOST("tankboost.png"), MISSILEBONUS("missileBonus.png"), MISSILE("missile.png"),
-	LASER("laser.png"), SUPERLASER("superLaser.png");
+	LASER("laser.png"), SUPERLASER("superLaser.png"), BOMB("bomb.png"), BOMBBONUS("bombBonus.png");
 
 	public final Image image;
 

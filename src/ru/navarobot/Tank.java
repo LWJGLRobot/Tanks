@@ -143,7 +143,7 @@ public class Tank extends Entity {
 		Object object = null;
 		if (weaponType == WeaponType.DEFAULT) {
 			if (Math.random() < 0.3) {
-				//soft bullet
+				// soft bullet
 				object = shootBullet(entityList, Color.PURPLE, world, group, frictionBox, 1, RATIO);
 			} else {
 				object = shootBullet(entityList, color, world, group, frictionBox, 0, RATIO);
@@ -158,9 +158,19 @@ public class Tank extends Entity {
 			object = shootBullet(entityList, Color.PURPLE, world, group, frictionBox, 1, RATIO);
 		} else if (weaponType == WeaponType.SUPERLASER) {
 			object = shootLaser(world, true, RATIO);
+		} else if (weaponType == WeaponType.BOMB) {
+			object = shootBomb(entityList, world, group, frictionBox, RATIO);
 		}
 		weaponType = WeaponType.DEFAULT;
 		return object;
+	}
+
+	public Bomb shootBomb(ArrayList<Entity> entityList, World world, Group group, Body frictionBox, float RATIO) {
+		Vec2 bombPostition = getDirectionVector(1f, RATIO);
+		return new Bomb(entityList, this, bombPostition.x / RATIO, bombPostition.y / RATIO,
+				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
+						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
+				world, group, frictionBox, Images.BOMB.image, RATIO);
 	}
 
 	public Laser shootLaser(World world, boolean superLaser, float RATIO) {
@@ -186,7 +196,7 @@ public class Tank extends Entity {
 		Bullet bullet = new Bullet(entityList, this, bulletPosition.x / RATIO, bulletPosition.y / RATIO,
 				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
 						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
-				color, world, group, frictionBox, restitution, RATIO);
+				color, world, group, frictionBox, restitution, 5, RATIO);
 		return bullet;
 	}
 

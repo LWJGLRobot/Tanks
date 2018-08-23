@@ -19,11 +19,13 @@ package ru.navarobot;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
 import org.jbox2d.collision.shapes.PolygonShape;
+import org.jbox2d.common.Rot;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
@@ -84,6 +86,7 @@ public class Main extends Application {
 		ArrayList<Ammo> ammoList = new ArrayList<>();
 		ArrayList<Missile> missileList = new ArrayList<>();
 		ArrayList<Laser> laserList = new ArrayList<>();
+		ArrayList<Bomb> bombList = new ArrayList<>();
 
 		TankRedAndBlue tankRed = new TankRedAndBlue(entityList, 200, 200, Images.TANKRED.image, world, group,
 				frictionBox, RATIO, new KeyCode[] { KeyCode.W, KeyCode.S, KeyCode.A, KeyCode.D, KeyCode.SPACE });
@@ -189,6 +192,14 @@ public class Main extends Application {
 					contactData[0] = contact.m_fixtureB.getBody();
 					contactData[1] = contact.m_fixtureA.getBody();
 					contactData[2] = contact.m_fixtureB.getBody().getLinearVelocity().clone();
+				} else if (contact.m_fixtureA.getBody().getUserData() instanceof Bomb) {
+					contactData[0] = contact.m_fixtureA.getBody();
+					contactData[1] = contact.m_fixtureB.getBody();
+					contactData[2] = contact.m_fixtureA.getBody().getLinearVelocity().clone();
+				} else if (contact.m_fixtureB.getBody().getUserData() instanceof Bomb) {
+					contactData[0] = contact.m_fixtureB.getBody();
+					contactData[1] = contact.m_fixtureA.getBody();
+					contactData[2] = contact.m_fixtureB.getBody().getLinearVelocity().clone();
 				} else if (contact.m_fixtureA.getBody().getUserData() instanceof Bonus) {
 					contactData[0] = contact.m_fixtureA.getBody();
 					contactData[1] = contact.m_fixtureB.getBody();
@@ -232,37 +243,24 @@ public class Main extends Application {
 				}
 
 				if (Math.random() < 0.005) {
-					double rand = Math.random();
-					if (rand < 0.2) {
-						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
-								(float) (Math.random() * scene.getHeight()), world, group, BonusType.FIREBOOST, RATIO);
-					} else if (rand < 0.4) {
-						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
-								(float) (Math.random() * scene.getHeight()), world, group, BonusType.TANKBOOST, RATIO);
-					} else if (rand < 0.6) {
-						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
-								(float) (Math.random() * scene.getHeight()), world, group, BonusType.MISSILEBONUS,
-								RATIO);
-					} else if (rand < 0.8) {
-						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
-								(float) (Math.random() * scene.getHeight()), world, group, BonusType.LASER, RATIO);
-					} else {
-						new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
-								(float) (Math.random() * scene.getHeight()), world, group, BonusType.SUPERLASER, RATIO);
-					}
+					BonusType[] bonusTypes = new BonusType[] { BonusType.FIREBOOST, BonusType.TANKBOOST,
+							BonusType.MISSILEBONUS, BonusType.LASER, BonusType.SUPERLASER, BonusType.BOMBBONUS };
+					new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
+							(float) (Math.random() * scene.getHeight()), world, group,
+							bonusTypes[new Random().nextInt(bonusTypes.length)], RATIO);
 				}
 
 				processShoot(tankRed.shoot(entityList, Color.RED, world, group, frictionBox, RATIO), missileList,
-						ammoList, laserList, particleGroupList, RATIO, world, group);
+						ammoList, laserList, particleGroupList, bombList, RATIO, world, group);
 				processShoot(tankGreen.shoot(entityList, Color.GREEN, world, group, frictionBox, RATIO), missileList,
-						ammoList, laserList, particleGroupList, RATIO, world, group);
+						ammoList, laserList, particleGroupList, bombList, RATIO, world, group);
 				processShoot(tankBlue.shoot(entityList, Color.BLUE, world, group, frictionBox, RATIO), missileList,
-						ammoList, laserList, particleGroupList, RATIO, world, group);
+						ammoList, laserList, particleGroupList, bombList, RATIO, world, group);
 
 				for (Bot bot : botList) {
 					if (Math.random() < 0.3) {
 						processShoot(bot.shoot(entityList, Color.BLACK, world, group, frictionBox, RATIO), missileList,
-								ammoList, laserList, particleGroupList, RATIO, world, group);
+								ammoList, laserList, particleGroupList, bombList, RATIO, world, group);
 					}
 				}
 
@@ -279,6 +277,26 @@ public class Main extends Application {
 				for (int i = 0; i < ammoList.size();) {
 					if (ammoList.get(i).checkForLifeTime(entityList, group, world)) {
 						ammoList.remove(i);
+					} else {
+						i++;
+					}
+				}
+
+				for (int i = 0; i < bombList.size();) {
+					if (bombList.get(i).checkForLifeTime()) {
+						int maxBullets = 10;
+						for (int j = 0; j < maxBullets; j++) {
+							Vec2 localPosition = new Vec2();
+							Rot rot = new Rot((float) (2 * Math.PI * j / maxBullets));
+							Rot.mulToOut(rot, new Vec2(0.1f * RATIO, 0), localPosition);
+							ammoList.add(new Bullet(entityList, null,
+									(bombList.get(i).getBody().getPosition().x + localPosition.x) / RATIO,
+									(bombList.get(i).getBody().getPosition().y + localPosition.y) / RATIO,
+									new Vec2(rot.getCos() * 10, rot.getSin() * 10), Color.PURPLE, world, group,
+									frictionBox, 1, 5, RATIO));
+						}
+						bombList.get(i).destroy(entityList, group, world);
+						bombList.remove(i);
 					} else {
 						i++;
 					}
@@ -309,7 +327,8 @@ public class Main extends Application {
 				time = System.currentTimeMillis();
 
 				if (contactData[0] != null) {
-					contact(contactData, entityList, ammoList, missileList, world, particleGroupList, group, RATIO);
+					contact(contactData, entityList, ammoList, missileList, world, particleGroupList, bombList, group,
+							frictionBox, RATIO);
 					contactData[0] = null;
 				}
 
@@ -348,8 +367,8 @@ public class Main extends Application {
 	}
 
 	public void processShoot(Object object, ArrayList<Missile> missileList, ArrayList<Ammo> ammoList,
-			ArrayList<Laser> laserList, ArrayList<ParticleGroupWithLifeTime> particleGroupList, float RATIO,
-			World world, Group group) {
+			ArrayList<Laser> laserList, ArrayList<ParticleGroupWithLifeTime> particleGroupList,
+			ArrayList<Bomb> bombList, float RATIO, World world, Group group) {
 		if (object instanceof Missile) {
 			missileList.add((Missile) object);
 			ammoList.add((Missile) object);
@@ -361,12 +380,14 @@ public class Main extends Application {
 					group, ParticleType.b2_powderParticle));
 		} else if (object instanceof ParticleGroupWithLifeTime) {
 			particleGroupList.add((ParticleGroupWithLifeTime) object);
+		} else if (object instanceof Bomb) {
+			bombList.add((Bomb) object);
 		}
 	}
 
 	public void contact(Object[] data, ArrayList<Entity> entityList, ArrayList<Ammo> ammoList,
 			ArrayList<Missile> missileList, World world, ArrayList<ParticleGroupWithLifeTime> particleGroupList,
-			Group group, float RATIO) {
+			ArrayList<Bomb> bombList, Group group, Body frictionBox, float RATIO) {
 		Body bodyA = (Body) data[0];
 		Body bodyB = (Body) data[1];
 
@@ -386,7 +407,9 @@ public class Main extends Application {
 			Bullet bullet = (Bullet) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
 				if (((Tank) bodyB.getUserData()).damage(1)) {
-					bullet.getTank().increaseScore();
+					if (bullet.getTank() != null) {
+						bullet.getTank().increaseScore();
+					}
 				}
 				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), (Vec2) data[2], 5, RATIO,
 						world, group, ParticleType.b2_powderParticle));
@@ -397,6 +420,26 @@ public class Main extends Application {
 						world, group, ParticleType.b2_powderParticle));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
+			}
+		} else if (bodyA.getUserData() instanceof Bomb) {
+			Bomb bomb = (Bomb) bodyA.getUserData();
+			if (bodyB.getUserData() instanceof Tank) {
+				if (((Tank) bodyB.getUserData()).damage(10)) {
+					bomb.getTank().increaseScore();
+				}
+				int maxBullets = 10;
+				for (int j = 0; j < maxBullets; j++) {
+					Vec2 localPosition = new Vec2();
+					Rot rot = new Rot((float) (2 * Math.PI * j / maxBullets));
+					Rot.mulToOut(rot, new Vec2(0.1f * RATIO, 0), localPosition);
+					ammoList.add(
+							new Bullet(entityList, null, (bomb.getBody().getPosition().x + localPosition.x) / RATIO,
+									(bomb.getBody().getPosition().y + localPosition.y) / RATIO,
+									new Vec2(rot.getCos() * 10, rot.getSin() * 10), Color.PURPLE, world, group,
+									frictionBox, 1, 5, RATIO));
+				}
+				bomb.destroy(entityList, group, world);
+				bombList.remove(bomb);
 			}
 		} else if (bodyA.getUserData() instanceof Bonus) {
 			Bonus bonus = (Bonus) bodyA.getUserData();
@@ -411,6 +454,8 @@ public class Main extends Application {
 					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.LASER);
 				} else if (bonus.getType() == BonusType.SUPERLASER) {
 					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.SUPERLASER);
+				} else if (bonus.getType() == BonusType.BOMBBONUS) {
+					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.BOMB);
 				}
 				bonus.destroy(entityList, group, world);
 			}
@@ -419,7 +464,7 @@ public class Main extends Application {
 
 	public void addRandomBoxes(ArrayList<Entity> entityList, ArrayList<Box> boxList, Group group, Scene scene,
 			World world, Body frictionBox, float RATIO) {
-		for (int i = 0; i < Math.random() * 5 * (scene.getWidth() * scene.getHeight()) / (640 * 480); i++) {
+		for (int i = 0; i < Math.random() * 10 * (scene.getWidth() * scene.getHeight()) / (640 * 480); i++) {
 			boxList.add(new Box(entityList, (float) (Math.random() * scene.getWidth()),
 					(float) (Math.random() * scene.getHeight()), Images.BOX.image, world, group, frictionBox, RATIO));
 		}

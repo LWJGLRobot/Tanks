@@ -55,7 +55,7 @@ public class Entity {
 		
 		entityList.add(this);
 	}
-
+	
 	public void updatePositionAndAngle(float RATIO) {
 
 	}

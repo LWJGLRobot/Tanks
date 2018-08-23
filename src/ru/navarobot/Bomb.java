@@ -19,7 +19,7 @@ package ru.navarobot;
 
 import java.util.ArrayList;
 
-import org.jbox2d.collision.shapes.CircleShape;
+import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyType;
@@ -27,41 +27,59 @@ import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.joints.FrictionJointDef;
 
 import javafx.scene.Group;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
-public class Bullet extends Ammo {
+public class Bomb extends Entity {
+	private long time;
+	private Tank tank;
 
-	public Bullet(ArrayList<Entity> entityList, Tank tank, float x, float y, Vec2 velocity, Color color, World world,
-			Group group, Body frictionBox, float restitution, float radius, float RATIO) {
+	public Bomb(ArrayList<Entity> entityList, Tank tank, float x, float y, Vec2 velocity, World world, Group group,
+			Body frictionBox, Image image, float RATIO) {
+		this.tank = tank;
+		ImageView imageView = new ImageView(image);
+		imageView.setX(x - image.getWidth() / 2);
+		imageView.setY(y - image.getHeight() / 2);
+		imageView.setCache(true);
+		imageView.setSmooth(true);
 
-		Circle circle = new Circle(x, y, radius, color);
+		PolygonShape shape = new PolygonShape();
+		shape.setAsBox((float) image.getWidth() * RATIO / 2, (float) image.getHeight() * RATIO / 2);
 
-		CircleShape shape = new CircleShape();
-		shape.setRadius(radius * RATIO);
-
-		initEntity(entityList, circle, BodyType.DYNAMIC, x, y, world, shape, 0.3f, 0.1f, true, group, restitution,
-				RATIO);
+		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 0.5f, 0.5f, true, group, 1, RATIO);
 
 		getBody().setUserData(this);
 
 		FrictionJointDef frictionJointDef = new FrictionJointDef();
 		frictionJointDef.initialize(getBody(), frictionBox, getBody().getPosition());
-		frictionJointDef.maxForce = 0.01f;
-		frictionJointDef.maxTorque = 0.01f;
+		frictionJointDef.maxForce = 0.1f;
+		frictionJointDef.maxTorque = 0.1f;
 		world.createJoint(frictionJointDef);
 
 		getBody().applyLinearImpulse(velocity.mul(getBody().getMass()), getBody().getPosition(), true);
 
-		initAmmo(tank);
+		time = System.currentTimeMillis();
+	}
+
+	public Tank getTank() {
+		return tank;
 	}
 
 	public void updatePositionAndAngle(float RATIO) {
-		getCircle().setCenterX(getBody().getPosition().x / RATIO);
-		getCircle().setCenterY(getBody().getPosition().y / RATIO);
+		getImageView().setX(getBody().getPosition().x / RATIO - getImageView().getImage().getWidth() / 2);
+		getImageView().setY(getBody().getPosition().y / RATIO - getImageView().getImage().getHeight() / 2);
+		getImageView().setRotate(Math.toDegrees(getBody().getAngle()));
 	}
 
-	public Circle getCircle() {
-		return (Circle) getNode();
+	public ImageView getImageView() {
+		return (ImageView) getNode();
 	}
+
+	public boolean checkForLifeTime() {
+		if (System.currentTimeMillis() - time > 10000) {
+			return true;
+		}
+		return false;
+	}
+
 }

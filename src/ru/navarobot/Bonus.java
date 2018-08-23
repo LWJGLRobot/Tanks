@@ -45,6 +45,8 @@ public class Bonus extends Entity {
 			image = Images.LASER.image;
 		} else if (type == BonusType.SUPERLASER) {
 			image = Images.SUPERLASER.image;
+		} else if(type == BonusType.BOMBBONUS) {
+			image = Images.BOMBBONUS.image;
 		}
 
 		ImageView imageView = new ImageView(image);
