@@ -20,21 +20,24 @@ package ru.navarobot;
 import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.World;
+import org.jbox2d.particle.ParticleColor;
 import org.jbox2d.particle.ParticleGroup;
 import org.jbox2d.particle.ParticleGroupDef;
 
 import javafx.scene.Group;
+import javafx.scene.paint.Color;
 
 public class ParticleGroupWithLifeTime {
 	private long time;
 	private ParticleGroup particleGroup;
 
-	public ParticleGroupWithLifeTime(Vec2 position, Vec2 linearVelocity, float radius, float RATIO, World world,
-			Group group, int flags) {
+	public ParticleGroupWithLifeTime(Vec2 position, Vec2 linearVelocity, Color color, float radius, float RATIO,
+			World world, Group group, int flags) {
 		ParticleGroupDef particleGroupDef = new ParticleGroupDef();
 		CircleShape shape = new CircleShape();
 		shape.setRadius(radius * RATIO);
-		// particleGroupDef.color = new ParticleColor(Color3f.RED);
+		particleGroupDef.color = new ParticleColor((byte) (color.getRed() * 127), (byte) (color.getGreen() * 127),
+				(byte) (color.getBlue() * 127), (byte) (color.getOpacity() * 127));
 		particleGroupDef.shape = shape;
 		particleGroupDef.flags = flags;
 		particleGroupDef.position.set(position);

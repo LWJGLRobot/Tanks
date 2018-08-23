@@ -43,19 +43,22 @@ public class Bot extends Tank {
 
 	public Object shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
 			float RATIO) {
-		boolean findPlayer[] = new boolean[1];
+		Fixture[] closestFixture = new Fixture[1];
+		float[] minL = new float[] { Float.MAX_VALUE };
 		world.raycast(new RayCastCallback() {
 
 			@Override
 			public float reportFixture(Fixture fixture, Vec2 point, Vec2 normal, float fraction) {
-				if (fixture.getBody().getUserData() instanceof TankRedAndBlue
-						|| fixture.getBody().getUserData() instanceof TankGreen) {
-					findPlayer[0] = true;
+				if (point.sub(getBody().getPosition()).length() < minL[0]) {
+					minL[0] = point.sub(getBody().getPosition()).length();
+					closestFixture[0] = fixture;
 				}
-				return 0;
+				return -1;
 			}
 		}, getBody().getPosition(), getDirectionVector(10, RATIO));
-		if (findPlayer[0]) {
+		if (closestFixture[0] != null && (closestFixture[0].getBody().getUserData() instanceof TankRedAndBlue
+				|| closestFixture[0].getBody().getUserData() instanceof TankGreen)
+				&& !((Tank) closestFixture[0].getBody().getUserData()).isDied()) {
 			return super.shoot(entityList, color, world, group, frictionBox, RATIO);
 		} else {
 			return null;

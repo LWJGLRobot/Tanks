@@ -33,7 +33,9 @@ import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.contacts.Contact;
+import org.jbox2d.particle.ParticleColor;
 import org.jbox2d.particle.ParticleType;
+import org.jbox2d.testbed.pooling.ColorPool;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -48,6 +50,13 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+
+	private final ColorPool<Color> cpool = new ColorPool<Color>() {
+		protected Color newColor(float r, float g, float b, float alpha) {
+			return new Color(r, g, b, alpha);
+		}
+	};
+	private final Color pcolor = new Color(1f, 1f, 1f, 1f);
 
 	public static void main(String[] args) {
 		launch(args);
@@ -151,7 +160,7 @@ public class Main extends Application {
 			canvas.setHeight(scene.getHeight());
 		});
 
-		Object[] contactData = new Object[3];
+		ArrayDeque<Object> contactDataQueue = new ArrayDeque<>();
 
 		world.setContactListener(new ContactListener() {
 
@@ -173,41 +182,38 @@ public class Main extends Application {
 
 			@Override
 			public void beginContact(Contact contact) {
-				if (contactData[0] != null) {
-					return;
-				}
 				if (contact.m_fixtureA.getBody().getUserData() instanceof Missile) {
-					contactData[0] = contact.m_fixtureA.getBody();
-					contactData[1] = contact.m_fixtureB.getBody();
-					contactData[2] = contact.m_fixtureA.getBody().getLinearVelocity().clone();
+					contactDataQueue.add(contact.m_fixtureA.getBody());
+					contactDataQueue.add(contact.m_fixtureB.getBody());
+					contactDataQueue.add(contact.m_fixtureA.getBody().getLinearVelocity().clone());
 				} else if (contact.m_fixtureB.getBody().getUserData() instanceof Missile) {
-					contactData[0] = contact.m_fixtureB.getBody();
-					contactData[1] = contact.m_fixtureA.getBody();
-					contactData[2] = contact.m_fixtureB.getBody().getLinearVelocity().clone();
+					contactDataQueue.add(contact.m_fixtureB.getBody());
+					contactDataQueue.add(contact.m_fixtureA.getBody());
+					contactDataQueue.add(contact.m_fixtureB.getBody().getLinearVelocity().clone());
 				} else if (contact.m_fixtureA.getBody().getUserData() instanceof Bullet) {
-					contactData[0] = contact.m_fixtureA.getBody();
-					contactData[1] = contact.m_fixtureB.getBody();
-					contactData[2] = contact.m_fixtureA.getBody().getLinearVelocity().clone();
+					contactDataQueue.add(contact.m_fixtureA.getBody());
+					contactDataQueue.add(contact.m_fixtureB.getBody());
+					contactDataQueue.add(contact.m_fixtureA.getBody().getLinearVelocity().clone());
 				} else if (contact.m_fixtureB.getBody().getUserData() instanceof Bullet) {
-					contactData[0] = contact.m_fixtureB.getBody();
-					contactData[1] = contact.m_fixtureA.getBody();
-					contactData[2] = contact.m_fixtureB.getBody().getLinearVelocity().clone();
+					contactDataQueue.add(contact.m_fixtureB.getBody());
+					contactDataQueue.add(contact.m_fixtureA.getBody());
+					contactDataQueue.add(contact.m_fixtureB.getBody().getLinearVelocity().clone());
 				} else if (contact.m_fixtureA.getBody().getUserData() instanceof Bomb) {
-					contactData[0] = contact.m_fixtureA.getBody();
-					contactData[1] = contact.m_fixtureB.getBody();
-					contactData[2] = contact.m_fixtureA.getBody().getLinearVelocity().clone();
+					contactDataQueue.add(contact.m_fixtureA.getBody());
+					contactDataQueue.add(contact.m_fixtureB.getBody());
+					contactDataQueue.add(contact.m_fixtureA.getBody().getLinearVelocity().clone());
 				} else if (contact.m_fixtureB.getBody().getUserData() instanceof Bomb) {
-					contactData[0] = contact.m_fixtureB.getBody();
-					contactData[1] = contact.m_fixtureA.getBody();
-					contactData[2] = contact.m_fixtureB.getBody().getLinearVelocity().clone();
+					contactDataQueue.add(contact.m_fixtureB.getBody());
+					contactDataQueue.add(contact.m_fixtureA.getBody());
+					contactDataQueue.add(contact.m_fixtureB.getBody().getLinearVelocity().clone());
 				} else if (contact.m_fixtureA.getBody().getUserData() instanceof Bonus) {
-					contactData[0] = contact.m_fixtureA.getBody();
-					contactData[1] = contact.m_fixtureB.getBody();
-					contactData[2] = contact.m_fixtureA.getBody().getLinearVelocity().clone();
+					contactDataQueue.add(contact.m_fixtureA.getBody());
+					contactDataQueue.add(contact.m_fixtureB.getBody());
+					contactDataQueue.add(contact.m_fixtureA.getBody().getLinearVelocity().clone());
 				} else if (contact.m_fixtureB.getBody().getUserData() instanceof Bonus) {
-					contactData[0] = contact.m_fixtureB.getBody();
-					contactData[1] = contact.m_fixtureA.getBody();
-					contactData[2] = contact.m_fixtureB.getBody().getLinearVelocity().clone();
+					contactDataQueue.add(contact.m_fixtureB.getBody());
+					contactDataQueue.add(contact.m_fixtureA.getBody());
+					contactDataQueue.add(contact.m_fixtureB.getBody().getLinearVelocity().clone());
 				}
 			}
 		});
@@ -326,27 +332,13 @@ public class Main extends Application {
 				world.step((System.currentTimeMillis() - time) / 1000f, 10, 10);
 				time = System.currentTimeMillis();
 
-				if (contactData[0] != null) {
-					contact(contactData, entityList, ammoList, missileList, world, particleGroupList, bombList, group,
-							frictionBox, RATIO);
-					contactData[0] = null;
+				while (!contactDataQueue.isEmpty()) {
+					contact(contactDataQueue, entityList, ammoList, missileList, world, particleGroupList, bombList,
+							group, frictionBox, RATIO);
 				}
 
 				for (Entity entity : entityList) {
 					entity.updatePositionAndAngle(RATIO);
-				}
-
-				if (world.getParticlePositionBuffer() != null) {
-					for (int i = 0; i < world.getParticlePositionBuffer().length; i++) {
-						if ((world.getParticleFlagsBuffer()[i] | ParticleType.b2_zombieParticle) == world
-								.getParticleFlagsBuffer()[i]) {
-							continue;
-						}
-						canvas.getGraphicsContext2D().setFill(Color.BLACK);
-						canvas.getGraphicsContext2D().fillOval(world.getParticlePositionBuffer()[i].x / RATIO,
-								world.getParticlePositionBuffer()[i].y / RATIO, world.getParticleRadius() / RATIO,
-								world.getParticleRadius() / RATIO);
-					}
 				}
 
 				for (int i = 0; i < particleGroupList.size();) {
@@ -355,6 +347,22 @@ public class Main extends Application {
 						particleGroupList.remove(i);
 					} else {
 						i++;
+					}
+				}
+
+				if (world.getParticlePositionBuffer() != null) {
+					for (int i = 0; i < world.getParticleCount(); i++) {
+						Color color;
+						if (world.getParticleColorBuffer() == null) {
+							color = pcolor;
+						} else {
+							ParticleColor c = world.getParticleColorBuffer()[i];
+							color = cpool.getColor(c.r * 1f / 127, c.g * 1f / 127, c.b * 1f / 127, c.a * 1f / 127);
+						}
+						canvas.getGraphicsContext2D().setFill(color);
+						canvas.getGraphicsContext2D().fillOval(world.getParticlePositionBuffer()[i].x / RATIO,
+								world.getParticlePositionBuffer()[i].y / RATIO, world.getParticleRadius() / RATIO,
+								world.getParticleRadius() / RATIO);
 					}
 				}
 			}
@@ -376,8 +384,8 @@ public class Main extends Application {
 			ammoList.add((Bullet) object);
 		} else if (object instanceof Laser) {
 			laserList.add((Laser) object);
-			particleGroupList.add(new ParticleGroupWithLifeTime(((Laser) object).getEnd(), new Vec2(), 10, RATIO, world,
-					group, ParticleType.b2_powderParticle));
+			particleGroupList.add(new ParticleGroupWithLifeTime(((Laser) object).getEnd(), new Vec2(), Color.BLACK, 10,
+					RATIO, world, group, ParticleType.b2_powderParticle));
 		} else if (object instanceof ParticleGroupWithLifeTime) {
 			particleGroupList.add((ParticleGroupWithLifeTime) object);
 		} else if (object instanceof Bomb) {
@@ -385,11 +393,15 @@ public class Main extends Application {
 		}
 	}
 
-	public void contact(Object[] data, ArrayList<Entity> entityList, ArrayList<Ammo> ammoList,
+	public void contact(ArrayDeque<Object> contactDataQueue, ArrayList<Entity> entityList, ArrayList<Ammo> ammoList,
 			ArrayList<Missile> missileList, World world, ArrayList<ParticleGroupWithLifeTime> particleGroupList,
 			ArrayList<Bomb> bombList, Group group, Body frictionBox, float RATIO) {
-		Body bodyA = (Body) data[0];
-		Body bodyB = (Body) data[1];
+		Body bodyA = (Body) contactDataQueue.poll();
+		Body bodyB = (Body) contactDataQueue.poll();
+		Vec2 velocity = (Vec2) contactDataQueue.poll();
+		if (bodyA.getFixtureList() == null || bodyB.getFixtureList() == null) {
+			return;
+		}
 
 		if (bodyA.getUserData() instanceof Missile) {
 			Missile missile = (Missile) bodyA.getUserData();
@@ -397,8 +409,8 @@ public class Main extends Application {
 				if (((Tank) bodyB.getUserData()).damage(5)) {
 					missile.getTank().increaseScore();
 				}
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), (Vec2) data[2], 10, RATIO,
-						world, group, ParticleType.b2_powderParticle));
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, Color.BLACK, 10,
+						RATIO, world, group, ParticleType.b2_powderParticle));
 				missile.destroy(entityList, group, world);
 				ammoList.remove(missile);
 				missileList.remove(missile);
@@ -411,13 +423,13 @@ public class Main extends Application {
 						bullet.getTank().increaseScore();
 					}
 				}
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), (Vec2) data[2], 5, RATIO,
-						world, group, ParticleType.b2_powderParticle));
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, Color.BLACK, 5,
+						RATIO, world, group, ParticleType.b2_powderParticle));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
 			} else if (bodyA.getFixtureList().getRestitution() == 0) {
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), (Vec2) data[2], 5, RATIO,
-						world, group, ParticleType.b2_powderParticle));
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, Color.BLACK, 5,
+						RATIO, world, group, ParticleType.b2_powderParticle));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
 			}
@@ -438,6 +450,8 @@ public class Main extends Application {
 									new Vec2(rot.getCos() * 10, rot.getSin() * 10), Color.PURPLE, world, group,
 									frictionBox, 1, 5, RATIO));
 				}
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, Color.DARKRED, 15,
+						RATIO, world, group, ParticleType.b2_powderParticle));
 				bomb.destroy(entityList, group, world);
 				bombList.remove(bomb);
 			}
