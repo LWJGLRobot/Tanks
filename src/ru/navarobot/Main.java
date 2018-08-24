@@ -48,6 +48,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import ru.navarobot.Bonus.BonusType;
+import ru.navarobot.Laser.LaserType;
 
 public class Main extends Application {
 
@@ -250,7 +252,8 @@ public class Main extends Application {
 
 				if (Math.random() < 0.005) {
 					BonusType[] bonusTypes = new BonusType[] { BonusType.FIREBOOST, BonusType.TANKBOOST,
-							BonusType.MISSILEBONUS, BonusType.LASER, BonusType.SUPERLASER, BonusType.BOMBBONUS };
+							BonusType.MISSILEBONUS, BonusType.LASER, BonusType.SUPERLASER, BonusType.BOMBBONUS,
+							BonusType.GUM, BonusType.REFLECTIONLASER, BonusType.HEALTH };
 					new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
 							(float) (Math.random() * scene.getHeight()), world, group,
 							bonusTypes[new Random().nextInt(bonusTypes.length)], RATIO);
@@ -290,17 +293,7 @@ public class Main extends Application {
 
 				for (int i = 0; i < bombList.size();) {
 					if (bombList.get(i).checkForLifeTime()) {
-						int maxBullets = 10;
-						for (int j = 0; j < maxBullets; j++) {
-							Vec2 localPosition = new Vec2();
-							Rot rot = new Rot((float) (2 * Math.PI * j / maxBullets));
-							Rot.mulToOut(rot, new Vec2(0.1f * RATIO, 0), localPosition);
-							ammoList.add(new Bullet(entityList, null,
-									(bombList.get(i).getBody().getPosition().x + localPosition.x) / RATIO,
-									(bombList.get(i).getBody().getPosition().y + localPosition.y) / RATIO,
-									new Vec2(rot.getCos() * 10, rot.getSin() * 10), Color.PURPLE, world, group,
-									frictionBox, 1, 5, RATIO));
-						}
+						createBoom(ammoList, bombList.get(i), entityList, world, group, frictionBox, RATIO);
 						bombList.get(i).destroy(entityList, group, world);
 						bombList.remove(i);
 					} else {
@@ -313,14 +306,19 @@ public class Main extends Application {
 						laserList.remove(i);
 					} else {
 						canvas.getGraphicsContext2D().setLineWidth(3);
-						if (!laserList.get(i).isSuperLaser()) {
+						if (laserList.get(i).getType() == LaserType.LASER) {
 							canvas.getGraphicsContext2D().setStroke(Color.RED);
-						} else {
+						} else if (laserList.get(i).getType() == LaserType.SUPERLASER) {
 							canvas.getGraphicsContext2D().setStroke(Color.DARKRED);
+						} else if (laserList.get(i).getType() == LaserType.REFLECTIONLASER) {
+							canvas.getGraphicsContext2D().setStroke(Color.PINK);
 						}
-						canvas.getGraphicsContext2D().strokeLine(laserList.get(i).getStart().x / RATIO,
-								laserList.get(i).getStart().y / RATIO, laserList.get(i).getEnd().x / RATIO,
-								laserList.get(i).getEnd().y / RATIO);
+						for (int j = 0; j < laserList.get(i).getPointList().size(); j += 2) {
+							canvas.getGraphicsContext2D().strokeLine(laserList.get(i).getPointList().get(j).x / RATIO,
+									laserList.get(i).getPointList().get(j).y / RATIO,
+									laserList.get(i).getPointList().get(j + 1).x / RATIO,
+									laserList.get(i).getPointList().get(j + 1).y / RATIO);
+						}
 						i++;
 					}
 				}
@@ -384,12 +382,27 @@ public class Main extends Application {
 			ammoList.add((Bullet) object);
 		} else if (object instanceof Laser) {
 			laserList.add((Laser) object);
-			particleGroupList.add(new ParticleGroupWithLifeTime(((Laser) object).getEnd(), new Vec2(), Color.BLACK, 10,
-					RATIO, world, group, ParticleType.b2_powderParticle));
+			particleGroupList.add(new ParticleGroupWithLifeTime(
+					((Laser) object).getPointList().get(((Laser) object).getPointList().size() - 1), new Vec2(), 5,
+					Color.BLACK, 10, RATIO, world, group, ParticleType.b2_powderParticle));
 		} else if (object instanceof ParticleGroupWithLifeTime) {
 			particleGroupList.add((ParticleGroupWithLifeTime) object);
 		} else if (object instanceof Bomb) {
 			bombList.add((Bomb) object);
+		}
+	}
+
+	public void createBoom(ArrayList<Ammo> ammoList, Bomb bomb, ArrayList<Entity> entityList, World world, Group group,
+			Body frictionBox, float RATIO) {
+		int maxBullets = 10;
+		for (int j = 0; j < maxBullets; j++) {
+			Vec2 localPosition = new Vec2();
+			Rot rot = new Rot((float) (2 * Math.PI * j / maxBullets));
+			Rot.mulToOut(rot, new Vec2(5f * RATIO, 0), localPosition);
+			ammoList.add(new Bullet(entityList, null, (bomb.getBody().getPosition().x + localPosition.x) / RATIO,
+					(bomb.getBody().getPosition().y + localPosition.y) / RATIO,
+					new Vec2(rot.getCos() * 10, rot.getSin() * 10), Color.PURPLE, world, group, frictionBox, 1, 5,
+					RATIO));
 		}
 	}
 
@@ -409,7 +422,7 @@ public class Main extends Application {
 				if (((Tank) bodyB.getUserData()).damage(5)) {
 					missile.getTank().increaseScore();
 				}
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, Color.BLACK, 10,
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 10,
 						RATIO, world, group, ParticleType.b2_powderParticle));
 				missile.destroy(entityList, group, world);
 				ammoList.remove(missile);
@@ -423,12 +436,12 @@ public class Main extends Application {
 						bullet.getTank().increaseScore();
 					}
 				}
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, Color.BLACK, 5,
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 5,
 						RATIO, world, group, ParticleType.b2_powderParticle));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
 			} else if (bodyA.getFixtureList().getRestitution() == 0) {
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, Color.BLACK, 5,
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 5,
 						RATIO, world, group, ParticleType.b2_powderParticle));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
@@ -439,18 +452,8 @@ public class Main extends Application {
 				if (((Tank) bodyB.getUserData()).damage(10)) {
 					bomb.getTank().increaseScore();
 				}
-				int maxBullets = 10;
-				for (int j = 0; j < maxBullets; j++) {
-					Vec2 localPosition = new Vec2();
-					Rot rot = new Rot((float) (2 * Math.PI * j / maxBullets));
-					Rot.mulToOut(rot, new Vec2(0.1f * RATIO, 0), localPosition);
-					ammoList.add(
-							new Bullet(entityList, null, (bomb.getBody().getPosition().x + localPosition.x) / RATIO,
-									(bomb.getBody().getPosition().y + localPosition.y) / RATIO,
-									new Vec2(rot.getCos() * 10, rot.getSin() * 10), Color.PURPLE, world, group,
-									frictionBox, 1, 5, RATIO));
-				}
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, Color.DARKRED, 15,
+				createBoom(ammoList, bomb, entityList, world, group, frictionBox, RATIO);
+				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.DARKRED, 15,
 						RATIO, world, group, ParticleType.b2_powderParticle));
 				bomb.destroy(entityList, group, world);
 				bombList.remove(bomb);
@@ -470,6 +473,12 @@ public class Main extends Application {
 					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.SUPERLASER);
 				} else if (bonus.getType() == BonusType.BOMBBONUS) {
 					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.BOMB);
+				} else if (bonus.getType() == BonusType.GUM) {
+					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.DEFEND);
+				} else if (bonus.getType() == BonusType.REFLECTIONLASER) {
+					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.REFLECTIONLASER);
+				} else if (bonus.getType() == BonusType.HEALTH) {
+					((Tank) bodyB.getUserData()).health(5);
 				}
 				bonus.destroy(entityList, group, world);
 			}

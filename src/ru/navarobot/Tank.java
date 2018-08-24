@@ -25,12 +25,14 @@ import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.joints.FrictionJointDef;
+import org.jbox2d.particle.ParticleType;
 
 import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import ru.navarobot.Laser.LaserType;
 
 public class Tank extends Entity {
 	private float force, torque;
@@ -79,6 +81,11 @@ public class Tank extends Entity {
 	public void increaseScore() {
 		score++;
 		text.setText(health + " " + score);
+	}
+
+	public void health(int health) {
+		this.health += health;
+		text.setText(this.health + " " + score);
 	}
 
 	public int getScore() {
@@ -153,16 +160,31 @@ public class Tank extends Entity {
 		} else if (weaponType == WeaponType.FIRE) {
 
 		} else if (weaponType == WeaponType.LASER) {
-			object = shootLaser(world, false, RATIO);
+			object = shootLaser(world, LaserType.LASER, RATIO);
 		} else if (weaponType == WeaponType.SOFTBULLET) {
 			object = shootBullet(entityList, Color.PURPLE, world, group, frictionBox, 1, RATIO);
 		} else if (weaponType == WeaponType.SUPERLASER) {
-			object = shootLaser(world, true, RATIO);
+			object = shootLaser(world, LaserType.SUPERLASER, RATIO);
 		} else if (weaponType == WeaponType.BOMB) {
 			object = shootBomb(entityList, world, group, frictionBox, RATIO);
+		} else if (weaponType == WeaponType.REFLECTIONLASER) {
+			object = shootLaser(world, LaserType.REFLECTIONLASER, RATIO);
+		} else if (weaponType == WeaponType.DEFEND) {
+			object = defend(color, group, world, RATIO);
 		}
 		weaponType = WeaponType.DEFAULT;
 		return object;
+	}
+
+	public ParticleGroupWithLifeTime defend(Color color, Group group, World world, float RATIO) {
+		return new ParticleGroupWithLifeTime(getDirectionVector(2f, RATIO),
+				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
+						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
+				0, color, 50, RATIO, world, group, ParticleType.b2_springParticle);
+	}
+
+	public WeaponType getWeaponType() {
+		return weaponType;
 	}
 
 	public Bomb shootBomb(ArrayList<Entity> entityList, World world, Group group, Body frictionBox, float RATIO) {
@@ -173,9 +195,9 @@ public class Tank extends Entity {
 				world, group, frictionBox, Images.BOMB.image, RATIO);
 	}
 
-	public Laser shootLaser(World world, boolean superLaser, float RATIO) {
-		Laser laser = new Laser(getBody().getPosition(), getDirectionVector(100, RATIO), superLaser);
-		laser.shoot(world);
+	public Laser shootLaser(World world, LaserType type, float RATIO) {
+		Laser laser = new Laser(type);
+		laser.shoot(world, getBody().getPosition(), getDirectionVector(100, RATIO), RATIO);
 		return laser;
 	}
 

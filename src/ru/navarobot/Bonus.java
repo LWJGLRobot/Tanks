@@ -28,6 +28,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 public class Bonus extends Entity {
+	public enum BonusType {
+		FIREBOOST, TANKBOOST, MISSILEBONUS, LASER, SUPERLASER, BOMBBONUS, GUM, REFLECTIONLASER, HEALTH;
+	}
+
 	private BonusType type;
 
 	public Bonus(ArrayList<Entity> entityList, float x, float y, World world, Group group, BonusType type,
@@ -45,8 +49,14 @@ public class Bonus extends Entity {
 			image = Images.LASER.image;
 		} else if (type == BonusType.SUPERLASER) {
 			image = Images.SUPERLASER.image;
-		} else if(type == BonusType.BOMBBONUS) {
+		} else if (type == BonusType.BOMBBONUS) {
 			image = Images.BOMBBONUS.image;
+		} else if (type == BonusType.GUM) {
+			image = Images.GUM.image;
+		} else if (type == BonusType.REFLECTIONLASER) {
+			image = Images.REFLECTIONLASER.image;
+		} else if (type == BonusType.HEALTH) {
+			image = Images.HEALTH.image;
 		}
 
 		ImageView imageView = new ImageView(image);

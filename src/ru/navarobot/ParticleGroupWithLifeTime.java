@@ -31,8 +31,8 @@ public class ParticleGroupWithLifeTime {
 	private long time;
 	private ParticleGroup particleGroup;
 
-	public ParticleGroupWithLifeTime(Vec2 position, Vec2 linearVelocity, Color color, float radius, float RATIO,
-			World world, Group group, int flags) {
+	public ParticleGroupWithLifeTime(Vec2 position, Vec2 linearVelocity, float angularVelocity, Color color,
+			float radius, float RATIO, World world, Group group, int flags) {
 		ParticleGroupDef particleGroupDef = new ParticleGroupDef();
 		CircleShape shape = new CircleShape();
 		shape.setRadius(radius * RATIO);
@@ -41,6 +41,7 @@ public class ParticleGroupWithLifeTime {
 		particleGroupDef.shape = shape;
 		particleGroupDef.flags = flags;
 		particleGroupDef.position.set(position);
+		particleGroupDef.angularVelocity = angularVelocity;
 		particleGroupDef.linearVelocity.set(linearVelocity);
 		particleGroup = world.createParticleGroup(particleGroupDef);
 		time = System.currentTimeMillis();
