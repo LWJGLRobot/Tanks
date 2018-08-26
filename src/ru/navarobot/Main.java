@@ -283,6 +283,17 @@ public class Main extends Application {
 					bot.moveOneStep();
 				}
 
+				/*
+				 * canvas.getGraphicsContext2D().setLineWidth(1);
+				 * canvas.getGraphicsContext2D().setLineDashes(10);
+				 * canvas.getGraphicsContext2D().setLineDashOffset(5);
+				 * canvas.getGraphicsContext2D().setStroke(Color.RED);
+				 * canvas.getGraphicsContext2D().strokeLine(tankRed.getDirectionVector(1,
+				 * RATIO).x / RATIO, tankRed.getDirectionVector(1, RATIO).y / RATIO,
+				 * tankRed.getDirectionVector(2, RATIO).x / RATIO, tankRed.getDirectionVector(2,
+				 * RATIO).y / RATIO);
+				 */
+
 				for (int i = 0; i < ammoList.size();) {
 					if (ammoList.get(i).checkForLifeTime(entityList, group, world)) {
 						ammoList.remove(i);
@@ -370,6 +381,8 @@ public class Main extends Application {
 		primaryStage.setTitle("Танчики");
 		primaryStage.setScene(scene);
 		primaryStage.show();
+
+		Audio.GAMESTART.play();
 	}
 
 	public void processShoot(Object object, ArrayList<Missile> missileList, ArrayList<Ammo> ammoList,
@@ -419,6 +432,7 @@ public class Main extends Application {
 		if (bodyA.getUserData() instanceof Missile) {
 			Missile missile = (Missile) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
+				Audio.BOOM.play();
 				if (((Tank) bodyB.getUserData()).damage(5)) {
 					missile.getTank().increaseScore();
 				}
@@ -431,6 +445,7 @@ public class Main extends Application {
 		} else if (bodyA.getUserData() instanceof Bullet) {
 			Bullet bullet = (Bullet) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
+				Audio.BOOM.play();
 				if (((Tank) bodyB.getUserData()).damage(1)) {
 					if (bullet.getTank() != null) {
 						bullet.getTank().increaseScore();
@@ -449,6 +464,7 @@ public class Main extends Application {
 		} else if (bodyA.getUserData() instanceof Bomb) {
 			Bomb bomb = (Bomb) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
+				Audio.BOOM.play();
 				if (((Tank) bodyB.getUserData()).damage(10)) {
 					bomb.getTank().increaseScore();
 				}
@@ -461,6 +477,7 @@ public class Main extends Application {
 		} else if (bodyA.getUserData() instanceof Bonus) {
 			Bonus bonus = (Bonus) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
+				Audio.COLLECT.play();
 				if (bonus.getType() == BonusType.FIREBOOST) {
 					((Tank) bodyB.getUserData()).increaseBulletImpulse(1);
 				} else if (bonus.getType() == BonusType.TANKBOOST) {

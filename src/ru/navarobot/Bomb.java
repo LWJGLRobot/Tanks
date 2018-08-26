@@ -77,6 +77,7 @@ public class Bomb extends Entity {
 
 	public boolean checkForLifeTime() {
 		if (System.currentTimeMillis() - time > 10000) {
+			Audio.BOOM.play();
 			return true;
 		}
 		return false;

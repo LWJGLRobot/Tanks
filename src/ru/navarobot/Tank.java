@@ -149,6 +149,7 @@ public class Tank extends Entity {
 		}
 		Object object = null;
 		if (weaponType == WeaponType.DEFAULT) {
+			Audio.POP.play();
 			if (Math.random() < 0.3) {
 				// soft bullet
 				object = shootBullet(entityList, Color.PURPLE, world, group, frictionBox, 1, RATIO);
@@ -156,20 +157,28 @@ public class Tank extends Entity {
 				object = shootBullet(entityList, color, world, group, frictionBox, 0, RATIO);
 			}
 		} else if (weaponType == WeaponType.MISSILE) {
+			Audio.MISSILE.play();
 			object = shootMissile(entityList, world, group, frictionBox, RATIO);
 		} else if (weaponType == WeaponType.FIRE) {
 
 		} else if (weaponType == WeaponType.LASER) {
+			Audio.LASER.play();
 			object = shootLaser(world, LaserType.LASER, RATIO);
 		} else if (weaponType == WeaponType.SOFTBULLET) {
+			Audio.POP.play();
 			object = shootBullet(entityList, Color.PURPLE, world, group, frictionBox, 1, RATIO);
 		} else if (weaponType == WeaponType.SUPERLASER) {
+			Audio.LASER.play();
 			object = shootLaser(world, LaserType.SUPERLASER, RATIO);
 		} else if (weaponType == WeaponType.BOMB) {
+			//Audio.FUSE.play();
+			Audio.POP.play();
 			object = shootBomb(entityList, world, group, frictionBox, RATIO);
 		} else if (weaponType == WeaponType.REFLECTIONLASER) {
+			Audio.LASER.play();
 			object = shootLaser(world, LaserType.REFLECTIONLASER, RATIO);
 		} else if (weaponType == WeaponType.DEFEND) {
+			Audio.BUBBLE.play();
 			object = defend(color, group, world, RATIO);
 		}
 		weaponType = WeaponType.DEFAULT;

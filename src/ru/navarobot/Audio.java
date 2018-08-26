@@ -17,18 +17,36 @@
  ******************************************************************************/
 package ru.navarobot;
 
-import javafx.scene.image.Image;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public enum Images {
-	POOP("poop.png"), TANKRED("tankRed.png"), TANKGREEN("tankGreen.png"), TANKBLUE("tankBlue.png"),
-	TANKBOT("tankBot.png"), BACKGROUND("background.png"), CURSOR("cursor.png"), BOX("box.png"),
-	FIREBOOST("fireboost.png"), TANKBOOST("tankboost.png"), MISSILEBONUS("missileBonus.png"), MISSILE("missile.png"),
-	LASER("laser.png"), SUPERLASER("superLaser.png"), BOMB("bomb.png"), BOMBBONUS("bombBonus.png"), GUM("gum.png"),
-	REFLECTIONLASER("reflectionLaser.png"), HEALTH("health.png");
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
-	public final Image image;
+public enum Audio {
 
-	Images(String fileName) {
-		this.image = new Image(ClassLoader.getSystemResourceAsStream("res/images/" + fileName));
+	LASER("lazer.wav"), MISSILE("missile.wav"), GAMESTART("gameStart.wav"), POP("pop.wav"), FUSE("fuse.wav"),
+	BOOM("boom.aiff"), COLLECT("collect.wav"), BUBBLE("bubble.aiff");
+
+	public final Media media;
+
+	public static final int MAX_DURATION_MILLIS = 3000;
+
+	Audio(String name) {
+		media = new Media(ClassLoader.getSystemResource("res/audio/" + name).toString());
+	}
+
+	public void play() {
+		MediaPlayer player = new MediaPlayer(media);
+		player.play();
+		new Timer(true).schedule(new TimerTask() {
+
+			@Override
+			public void run() {
+				player.stop();
+				player.dispose();
+			}
+		}, Double.isFinite(media.getDuration().toMillis()) ? (long) media.getDuration().toMillis()
+				: MAX_DURATION_MILLIS);
 	}
 }
