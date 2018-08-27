@@ -29,7 +29,7 @@ import javafx.scene.image.ImageView;
 
 public class Bonus extends Entity {
 	public enum BonusType {
-		FIREBOOST, TANKBOOST, MISSILEBONUS, LASER, SUPERLASER, BOMBBONUS, GUM, REFLECTIONLASER, HEALTH;
+		FIREBOOST, TANKBOOST, MISSILEBONUS, LASER, SUPERLASER, BOMBBONUS, GUM, REFLECTIONLASER, HEALTH, FLASH;
 	}
 
 	private BonusType type;
@@ -57,6 +57,8 @@ public class Bonus extends Entity {
 			image = Images.REFLECTIONLASER.image;
 		} else if (type == BonusType.HEALTH) {
 			image = Images.HEALTH.image;
+		} else if (type == BonusType.FLASH) {
+			image = Images.SUN.image;
 		}
 
 		ImageView imageView = new ImageView(image);

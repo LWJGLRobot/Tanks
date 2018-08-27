@@ -69,6 +69,10 @@ public class Tank extends Entity {
 		restart(image);
 	}
 
+	public void updateText() {
+		text.setText("♥:" + health + " K:" + score);
+	}
+
 	public void setWeaponType(WeaponType weaponType) {
 		this.weaponType = weaponType;
 	}
@@ -79,13 +83,14 @@ public class Tank extends Entity {
 	}
 
 	public void increaseScore() {
+		Audio.WIN.play();
 		score++;
-		text.setText(health + " " + score);
+		updateText();
 	}
 
 	public void health(int health) {
 		this.health += health;
-		text.setText(this.health + " " + score);
+		updateText();
 	}
 
 	public int getScore() {
@@ -108,7 +113,7 @@ public class Tank extends Entity {
 		torque = 1.05f;
 		ammoVelocity = 5f;
 		health = 30;
-		text.setText(health + " " + score);
+		updateText();
 	}
 
 	public boolean isDied() {
@@ -125,7 +130,7 @@ public class Tank extends Entity {
 
 	public boolean damage(int damage) {
 		health -= damage;
-		text.setText(health + " " + score);
+		updateText();
 		if (health < 0 && !died) {
 			died = true;
 			getImageView().setImage(Images.POOP.image);
@@ -171,7 +176,7 @@ public class Tank extends Entity {
 			Audio.LASER.play();
 			object = shootLaser(world, LaserType.SUPERLASER, RATIO);
 		} else if (weaponType == WeaponType.BOMB) {
-			//Audio.FUSE.play();
+			// Audio.FUSE.play();
 			Audio.POP.play();
 			object = shootBomb(entityList, world, group, frictionBox, RATIO);
 		} else if (weaponType == WeaponType.REFLECTIONLASER) {
@@ -180,9 +185,24 @@ public class Tank extends Entity {
 		} else if (weaponType == WeaponType.DEFEND) {
 			Audio.BUBBLE.play();
 			object = defend(color, group, world, RATIO);
+		} else if (weaponType == WeaponType.FLASH) {
+			Audio.POP.play();
+			object = flashLight(entityList, Color.WHITE, world, group, frictionBox, 1, RATIO);
 		}
 		weaponType = WeaponType.DEFAULT;
 		return object;
+	}
+	
+	public Flash flashLight(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
+			float restitution, float RATIO) {
+		if (died)
+			return null;
+		Vec2 flashPosition = getDirectionVector(0.7f, RATIO);
+		Flash flash = new Flash(entityList, this, flashPosition.x / RATIO, flashPosition.y / RATIO,
+				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
+						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
+				color, world, group, frictionBox, restitution, 5, RATIO);
+		return flash;
 	}
 
 	public ParticleGroupWithLifeTime defend(Color color, Group group, World world, float RATIO) {

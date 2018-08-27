@@ -26,7 +26,7 @@ import javafx.scene.media.MediaPlayer;
 public enum Audio {
 
 	LASER("lazer.wav"), MISSILE("missile.wav"), GAMESTART("gameStart.wav"), POP("pop.wav"), FUSE("fuse.wav"),
-	BOOM("boom.aiff"), COLLECT("collect.wav"), BUBBLE("bubble.aiff");
+	BOOM("boom.aiff"), COLLECT("collect.wav"), BUBBLE("bubble.aiff"), WIN("win.wav");
 
 	public final Media media;
 

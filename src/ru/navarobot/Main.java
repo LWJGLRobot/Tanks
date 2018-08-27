@@ -43,7 +43,6 @@ import javafx.scene.Group;
 import javafx.scene.ImageCursor;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
@@ -98,6 +97,7 @@ public class Main extends Application {
 		ArrayList<Missile> missileList = new ArrayList<>();
 		ArrayList<Laser> laserList = new ArrayList<>();
 		ArrayList<Bomb> bombList = new ArrayList<>();
+		ArrayList<Flash> flashList = new ArrayList<>();
 
 		TankRedAndBlue tankRed = new TankRedAndBlue(entityList, 200, 200, Images.TANKRED.image, world, group,
 				frictionBox, RATIO, new KeyCode[] { KeyCode.W, KeyCode.S, KeyCode.A, KeyCode.D, KeyCode.SPACE });
@@ -136,6 +136,8 @@ public class Main extends Application {
 				keyQueue.add(KeyCode.R);
 			} else if (event.getCode() == KeyCode.B) {
 				keyQueue.add(KeyCode.B);
+			} else if (event.getCode() == KeyCode.O) {
+				keyQueue.add(KeyCode.O);
 			}
 		});
 
@@ -248,28 +250,32 @@ public class Main extends Application {
 							frictionBox, RATIO);
 					botList.add(bot);
 					tankList.add(bot);
+				} else if (keyCode == KeyCode.O) {
+					boxList.add(new Box(entityList, (float) (Math.random() * scene.getWidth()),
+							(float) (Math.random() * scene.getHeight()), Images.BOX.image, world, group, frictionBox,
+							RATIO));
 				}
 
 				if (Math.random() < 0.005) {
 					BonusType[] bonusTypes = new BonusType[] { BonusType.FIREBOOST, BonusType.TANKBOOST,
 							BonusType.MISSILEBONUS, BonusType.LASER, BonusType.SUPERLASER, BonusType.BOMBBONUS,
-							BonusType.GUM, BonusType.REFLECTIONLASER, BonusType.HEALTH };
+							BonusType.GUM, BonusType.REFLECTIONLASER, BonusType.HEALTH, BonusType.FLASH };
 					new Bonus(entityList, (float) (Math.random() * scene.getWidth()),
 							(float) (Math.random() * scene.getHeight()), world, group,
 							bonusTypes[new Random().nextInt(bonusTypes.length)], RATIO);
 				}
 
 				processShoot(tankRed.shoot(entityList, Color.RED, world, group, frictionBox, RATIO), missileList,
-						ammoList, laserList, particleGroupList, bombList, RATIO, world, group);
+						ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world, group);
 				processShoot(tankGreen.shoot(entityList, Color.GREEN, world, group, frictionBox, RATIO), missileList,
-						ammoList, laserList, particleGroupList, bombList, RATIO, world, group);
+						ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world, group);
 				processShoot(tankBlue.shoot(entityList, Color.BLUE, world, group, frictionBox, RATIO), missileList,
-						ammoList, laserList, particleGroupList, bombList, RATIO, world, group);
+						ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world, group);
 
 				for (Bot bot : botList) {
 					if (Math.random() < 0.3) {
 						processShoot(bot.shoot(entityList, Color.BLACK, world, group, frictionBox, RATIO), missileList,
-								ammoList, laserList, particleGroupList, bombList, RATIO, world, group);
+								ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world, group);
 					}
 				}
 
@@ -374,10 +380,35 @@ public class Main extends Application {
 								world.getParticleRadius() / RATIO);
 					}
 				}
+
+				for (int i = 0; i < flashList.size();) {
+					if (flashList.get(i).checkForLifeTime()) {
+						flashList.get(i).destroy(entityList, group, world);
+						flashList.remove(i);
+					} else {
+						i++;
+					}
+				}
+
+				for (Flash flash : flashList) {
+					canvas.getGraphicsContext2D().setLineWidth(1);
+					canvas.getGraphicsContext2D().setStroke(Color.YELLOW);
+					for (int i = 0; i < flash.getNumOfLights(); i++) {
+						Vec2 end = new Vec2();
+						Rot.mulToOut(new Rot((float) (2 * Math.PI * i / flash.getNumOfLights())), new Vec2(1, 0), end);
+						Vec2 realEnd = flash.raycastClosestPoint(end.mul(100), world);
+						canvas.getGraphicsContext2D().strokeLine(flash.getBody().getPosition().x / RATIO,
+								flash.getBody().getPosition().y / RATIO, realEnd.x / RATIO, realEnd.y / RATIO);
+					}
+				}
 			}
 		}.start();
 
-		primaryStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("res/images/poop.png")));
+		primaryStage.setOnCloseRequest((event) -> {
+			System.exit(0);
+		});
+
+		primaryStage.getIcons().add(Images.POOP.image);
 		primaryStage.setTitle("Танчики");
 		primaryStage.setScene(scene);
 		primaryStage.show();
@@ -387,7 +418,7 @@ public class Main extends Application {
 
 	public void processShoot(Object object, ArrayList<Missile> missileList, ArrayList<Ammo> ammoList,
 			ArrayList<Laser> laserList, ArrayList<ParticleGroupWithLifeTime> particleGroupList,
-			ArrayList<Bomb> bombList, float RATIO, World world, Group group) {
+			ArrayList<Bomb> bombList, ArrayList<Flash> flashList, float RATIO, World world, Group group) {
 		if (object instanceof Missile) {
 			missileList.add((Missile) object);
 			ammoList.add((Missile) object);
@@ -402,6 +433,8 @@ public class Main extends Application {
 			particleGroupList.add((ParticleGroupWithLifeTime) object);
 		} else if (object instanceof Bomb) {
 			bombList.add((Bomb) object);
+		} else if (object instanceof Flash) {
+			flashList.add((Flash) object);
 		}
 	}
 
@@ -496,6 +529,8 @@ public class Main extends Application {
 					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.REFLECTIONLASER);
 				} else if (bonus.getType() == BonusType.HEALTH) {
 					((Tank) bodyB.getUserData()).health(5);
+				} else if (bonus.getType() == BonusType.FLASH) {
+					((Tank) bodyB.getUserData()).setWeaponType(WeaponType.FLASH);
 				}
 				bonus.destroy(entityList, group, world);
 			}
