@@ -29,13 +29,15 @@ import javafx.scene.paint.Color;
 
 public class ParticleGroupWithLifeTime {
 	private long time;
+	private long lifeTime;
 	private ParticleGroup particleGroup;
 
 	public ParticleGroupWithLifeTime(Vec2 position, Vec2 linearVelocity, float angularVelocity, Color color,
-			float radius, float RATIO, World world, Group group, int flags) {
+			float radius, float RATIO, World world, Group group, int flags, int groupFlags, long lifeTime) {
 		ParticleGroupDef particleGroupDef = new ParticleGroupDef();
 		CircleShape shape = new CircleShape();
 		shape.setRadius(radius * RATIO);
+		particleGroupDef.groupFlags = groupFlags;
 		particleGroupDef.color = new ParticleColor((byte) (color.getRed() * 127), (byte) (color.getGreen() * 127),
 				(byte) (color.getBlue() * 127), (byte) (color.getOpacity() * 127));
 		particleGroupDef.shape = shape;
@@ -45,6 +47,11 @@ public class ParticleGroupWithLifeTime {
 		particleGroupDef.linearVelocity.set(linearVelocity);
 		particleGroup = world.createParticleGroup(particleGroupDef);
 		time = System.currentTimeMillis();
+		this.lifeTime = lifeTime;
+	}
+
+	public long getLifeTime() {
+		return lifeTime;
 	}
 
 	public ParticleGroup getParticleGroup() {

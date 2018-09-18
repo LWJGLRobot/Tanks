@@ -17,6 +17,10 @@
  ******************************************************************************/
 package ru.navarobot;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import org.jbox2d.dynamics.Body;
@@ -45,6 +49,26 @@ public class TankRedAndBlue extends Tank {
 		controls = new boolean[] { false, false, false, false };
 
 		isShooting = false;
+	}
+
+	/*
+	 * for training bots
+	 */
+	public void saveDat(World world) {
+		double[] data = getSensorData(world);
+		try {
+			PrintWriter pw = new PrintWriter(
+					new FileOutputStream(new File("/home/anvar/Desktop/Tanks/src/res/nnet/train.dat"), true));
+			for (double num : data) {
+				pw.print(num + " ");
+			}
+			pw.print((isMoveForward() ? 1 : 0) + " " + (isMoveBackward() ? 1 : 0) + " " + (isRotateLeft() ? 1 : 0) + " "
+					+ (isRotateRight() ? 1 : 0) + "\n");
+			pw.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void processInput(KeyEvent event) {

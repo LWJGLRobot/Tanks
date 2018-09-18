@@ -19,12 +19,16 @@ package ru.navarobot;
 
 import java.util.ArrayList;
 
+import org.jbox2d.callbacks.RayCastCallback;
 import org.jbox2d.collision.shapes.PolygonShape;
+import org.jbox2d.common.Rot;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyType;
+import org.jbox2d.dynamics.Fixture;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.joints.FrictionJointDef;
+import org.jbox2d.particle.ParticleGroupType;
 import org.jbox2d.particle.ParticleType;
 
 import javafx.scene.Group;
@@ -67,6 +71,55 @@ public class Tank extends Entity {
 		world.createJoint(frictionJointDef);
 
 		restart(image);
+	}
+
+	public double[] getSensorData(World world) {
+		Vec2[] points = closestPoints(world);
+		double[] data = new double[points.length];
+		for (int i = 0; i < points.length; i++) {
+			data[i] = points[i].sub(getBody().getPosition()).length();
+		}
+		return data;
+	}
+
+	public Vec2[] closestPoints(World world) {
+		Vec2[] data = new Vec2[64];
+		for (int i = 0; i < data.length; i++) {
+			Vec2 end = new Vec2();
+			Rot.mulToOut(new Rot((float) (-Math.PI / 2 + Math.PI * i / 64) + getBody().getAngle()), new Vec2(1, 0),
+					end);
+			Vec2[] closestPoint = new Vec2[1];
+			float[] minL = new float[] { Float.MAX_VALUE };
+			world.raycast(new RayCastCallback() {
+
+				@Override
+				public float reportFixture(Fixture fixture, Vec2 point, Vec2 normal, float fraction) {
+					if (point.sub(getBody().getPosition()).length() < minL[0]) {
+						closestPoint[0] = point.clone();
+						minL[0] = point.sub(getBody().getPosition()).length();
+					}
+					return -1;
+				}
+			}, getBody().getPosition(), end.mul(100));
+			data[i] = closestPoint[0] == null ? end.mul(10) : closestPoint[0];
+		}
+		return data;
+	}
+
+	public float getForce() {
+		return force;
+	}
+
+	public void setForce(float force) {
+		this.force = force;
+	}
+
+	public float getTorque() {
+		return torque;
+	}
+
+	public void setTorque(float torque) {
+		this.torque = torque;
 	}
 
 	public void updateText() {
@@ -112,7 +165,7 @@ public class Tank extends Entity {
 		force = 1.3f;
 		torque = 1.05f;
 		ammoVelocity = 5f;
-		health = 30;
+		health = 20;
 		updateText();
 	}
 
@@ -192,7 +245,7 @@ public class Tank extends Entity {
 		weaponType = WeaponType.DEFAULT;
 		return object;
 	}
-	
+
 	public Flash flashLight(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
 			float restitution, float RATIO) {
 		if (died)
@@ -206,10 +259,8 @@ public class Tank extends Entity {
 	}
 
 	public ParticleGroupWithLifeTime defend(Color color, Group group, World world, float RATIO) {
-		return new ParticleGroupWithLifeTime(getDirectionVector(2f, RATIO),
-				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
-						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
-				0, color, 50, RATIO, world, group, ParticleType.b2_springParticle);
+		return new ParticleGroupWithLifeTime(getBody().getPosition(), new Vec2(), 0, color, 50, RATIO, world, group,
+				ParticleType.b2_springParticle, ParticleGroupType.b2_solidParticleGroup, 15000);
 	}
 
 	public WeaponType getWeaponType() {

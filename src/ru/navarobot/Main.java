@@ -34,8 +34,10 @@ import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
 import org.jbox2d.dynamics.contacts.Contact;
 import org.jbox2d.particle.ParticleColor;
+import org.jbox2d.particle.ParticleGroupType;
 import org.jbox2d.particle.ParticleType;
 import org.jbox2d.testbed.pooling.ColorPool;
+import org.neuroph.core.NeuralNetwork;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -48,6 +50,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import ru.navarobot.Bonus.BonusType;
+import ru.navarobot.Bot.BotType;
 import ru.navarobot.Laser.LaserType;
 
 public class Main extends Application {
@@ -132,12 +135,9 @@ public class Main extends Application {
 			tankBlue.processInput(event);
 			tankRed.processInput(event);
 
-			if (event.getCode() == KeyCode.R) {
-				keyQueue.add(KeyCode.R);
-			} else if (event.getCode() == KeyCode.B) {
-				keyQueue.add(KeyCode.B);
-			} else if (event.getCode() == KeyCode.O) {
-				keyQueue.add(KeyCode.O);
+			if (event.getCode() == KeyCode.R || event.getCode() == KeyCode.B || event.getCode() == KeyCode.O
+					|| event.getCode() == KeyCode.N) {
+				keyQueue.add(event.getCode());
 			}
 		});
 
@@ -160,6 +160,11 @@ public class Main extends Application {
 		});
 
 		primaryStage.heightProperty().addListener((event, numOld, numNew) -> {
+			setBorders(borders, world, (float) scene.getWidth(), (float) scene.getHeight(), RATIO);
+			canvas.setHeight(scene.getHeight());
+		});
+
+		primaryStage.fullScreenProperty().addListener((event, old, newBool) -> {
 			setBorders(borders, world, (float) scene.getWidth(), (float) scene.getHeight(), RATIO);
 			canvas.setHeight(scene.getHeight());
 		});
@@ -222,8 +227,11 @@ public class Main extends Application {
 			}
 		});
 
+		NeuralNetwork<?> neuralNet = NeuralNetwork.load(ClassLoader.getSystemResourceAsStream("res/nnet/net.nnet"));
+
 		new AnimationTimer() {
 			long time = System.currentTimeMillis();
+			boolean botBattle = false;
 
 			@Override
 			public void handle(long now) {
@@ -247,13 +255,15 @@ public class Main extends Application {
 				} else if (keyCode == KeyCode.B) {
 					Bot bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
 							(float) (Math.random() * scene.getHeight()), Images.TANKBOT.image, world, group,
-							frictionBox, RATIO);
+							frictionBox, BotType.NNET, RATIO);
 					botList.add(bot);
 					tankList.add(bot);
 				} else if (keyCode == KeyCode.O) {
 					boxList.add(new Box(entityList, (float) (Math.random() * scene.getWidth()),
 							(float) (Math.random() * scene.getHeight()), Images.BOX.image, world, group, frictionBox,
 							RATIO));
+				} else if (keyCode == KeyCode.N) {
+					botBattle = !botBattle;
 				}
 
 				if (Math.random() < 0.005) {
@@ -274,8 +284,9 @@ public class Main extends Application {
 
 				for (Bot bot : botList) {
 					if (Math.random() < 0.3) {
-						processShoot(bot.shoot(entityList, Color.BLACK, world, group, frictionBox, RATIO), missileList,
-								ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world, group);
+						processShoot(bot.shoot(entityList, Color.BLACK, world, group, frictionBox, botBattle, RATIO),
+								missileList, ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world,
+								group);
 					}
 				}
 
@@ -286,8 +297,17 @@ public class Main extends Application {
 				tankBlue.moveOneStep();
 
 				for (Bot bot : botList) {
-					bot.moveOneStep();
+					bot.moveOneStep(world, neuralNet);
 				}
+
+				/*
+				 * for (Vec2 point : tankRed.closestPoints(world)) {
+				 * canvas.getGraphicsContext2D().strokeLine(tankRed.getBody().getPosition().x /
+				 * RATIO, tankRed.getBody().getPosition().y / RATIO, point.x / RATIO, point.y /
+				 * RATIO); }
+				 */
+
+				// tankRed.saveDat(world);
 
 				/*
 				 * canvas.getGraphicsContext2D().setLineWidth(1);
@@ -357,7 +377,8 @@ public class Main extends Application {
 				}
 
 				for (int i = 0; i < particleGroupList.size();) {
-					if (System.currentTimeMillis() - particleGroupList.get(i).getTime() > 10000) {
+					if (System.currentTimeMillis() - particleGroupList.get(i).getTime() > particleGroupList.get(i)
+							.getLifeTime()) {
 						world.destroyParticlesInGroup(particleGroupList.get(i).getParticleGroup());
 						particleGroupList.remove(i);
 					} else {
@@ -428,7 +449,8 @@ public class Main extends Application {
 			laserList.add((Laser) object);
 			particleGroupList.add(new ParticleGroupWithLifeTime(
 					((Laser) object).getPointList().get(((Laser) object).getPointList().size() - 1), new Vec2(), 5,
-					Color.BLACK, 10, RATIO, world, group, ParticleType.b2_powderParticle));
+					Color.BLACK, 10, RATIO, world, group, ParticleType.b2_powderParticle,
+					ParticleGroupType.b2_solidParticleGroup, 10000));
 		} else if (object instanceof ParticleGroupWithLifeTime) {
 			particleGroupList.add((ParticleGroupWithLifeTime) object);
 		} else if (object instanceof Bomb) {
@@ -469,8 +491,9 @@ public class Main extends Application {
 				if (((Tank) bodyB.getUserData()).damage(5)) {
 					missile.getTank().increaseScore();
 				}
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 10,
-						RATIO, world, group, ParticleType.b2_powderParticle));
+				particleGroupList.add(
+						new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 10, RATIO, world,
+								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 10000));
 				missile.destroy(entityList, group, world);
 				ammoList.remove(missile);
 				missileList.remove(missile);
@@ -484,13 +507,15 @@ public class Main extends Application {
 						bullet.getTank().increaseScore();
 					}
 				}
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 5,
-						RATIO, world, group, ParticleType.b2_powderParticle));
+				particleGroupList.add(
+						new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 5, RATIO, world,
+								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 10000));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
 			} else if (bodyA.getFixtureList().getRestitution() == 0) {
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 5,
-						RATIO, world, group, ParticleType.b2_powderParticle));
+				particleGroupList.add(
+						new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 5, RATIO, world,
+								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 10000));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
 			}
@@ -502,8 +527,9 @@ public class Main extends Application {
 					bomb.getTank().increaseScore();
 				}
 				createBoom(ammoList, bomb, entityList, world, group, frictionBox, RATIO);
-				particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.DARKRED, 15,
-						RATIO, world, group, ParticleType.b2_powderParticle));
+				particleGroupList.add(
+						new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.DARKRED, 15, RATIO, world,
+								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 10000));
 				bomb.destroy(entityList, group, world);
 				bombList.remove(bomb);
 			}
