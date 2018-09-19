@@ -49,36 +49,69 @@ public class Bot extends Tank {
 	}
 
 	public Object shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
-			boolean botBattle, float RATIO) {
-		Fixture[] closestFixture = new Fixture[1];
-		float[] minL = new float[] { Float.MAX_VALUE };
-		world.raycast(new RayCastCallback() {
+			boolean botBattle, boolean superBots, float RATIO) {
 
-			@Override
-			public float reportFixture(Fixture fixture, Vec2 point, Vec2 normal, float fraction) {
-				if (point.sub(getBody().getPosition()).length() < minL[0]) {
-					minL[0] = point.sub(getBody().getPosition()).length();
-					closestFixture[0] = fixture;
+		if (superBots) {
+			for (double i = 0; i < 2 * Math.PI; i += Math.PI * 2 / 100) {
+				Fixture[] closestFixture = new Fixture[1];
+				float[] minL = new float[] { Float.MAX_VALUE };
+				world.raycast(new RayCastCallback() {
+
+					@Override
+					public float reportFixture(Fixture fixture, Vec2 point, Vec2 normal, float fraction) {
+						if (point.sub(getBody().getPosition()).length() < minL[0]) {
+							minL[0] = point.sub(getBody().getPosition()).length();
+							closestFixture[0] = fixture;
+						}
+						return -1;
+					}
+				}, getBody().getPosition(), getDirectionVector((float) i, 10, RATIO));
+				if (closestFixture[0] != null
+						&& ((closestFixture[0].getBody().getUserData() instanceof Tank && botBattle)
+								|| closestFixture[0].getBody().getUserData() instanceof TankRedAndBlue
+								|| closestFixture[0].getBody().getUserData() instanceof TankGreen)
+						&& !((Tank) closestFixture[0].getBody().getUserData()).isDied()) {
+					getBody().setTransform(getBody().getPosition(), (float) i);
+					return super.shoot(entityList, color, world, group, frictionBox, RATIO);
 				}
-				return -1;
 			}
-		}, getBody().getPosition(), getDirectionVector(10, RATIO));
-		if (closestFixture[0] != null
-				&& ((closestFixture[0].getBody().getUserData() instanceof Tank && botBattle)
-						|| closestFixture[0].getBody().getUserData() instanceof TankRedAndBlue
-						|| closestFixture[0].getBody().getUserData() instanceof TankGreen)
-				&& !((Tank) closestFixture[0].getBody().getUserData()).isDied()) {
-			return super.shoot(entityList, color, world, group, frictionBox, RATIO);
-		} else {
 			return null;
+		} else {
+			Fixture[] closestFixture = new Fixture[1];
+			float[] minL = new float[] { Float.MAX_VALUE };
+			world.raycast(new RayCastCallback() {
+
+				@Override
+				public float reportFixture(Fixture fixture, Vec2 point, Vec2 normal, float fraction) {
+					if (point.sub(getBody().getPosition()).length() < minL[0]) {
+						minL[0] = point.sub(getBody().getPosition()).length();
+						closestFixture[0] = fixture;
+					}
+					return -1;
+				}
+			}, getBody().getPosition(), getDirectionVector(10, RATIO));
+			if (closestFixture[0] != null
+					&& ((closestFixture[0].getBody().getUserData() instanceof Tank && botBattle)
+							|| closestFixture[0].getBody().getUserData() instanceof TankRedAndBlue
+							|| closestFixture[0].getBody().getUserData() instanceof TankGreen)
+					&& !((Tank) closestFixture[0].getBody().getUserData()).isDied()) {
+				return super.shoot(entityList, color, world, group, frictionBox, RATIO);
+			} else {
+				return null;
+			}
 		}
 	}
 
 	public void moveOneStepNNet(World world, NeuralNetwork<?> neuralNet) {
+		if (getBody().getLinearVelocity().length() < 0.01) {
+			getBody().setTransform(getBody().getPosition(), (float) (Math.random() * Math.PI * 2));
+		}
+
 		neuralNet.setInput(getSensorData(world));
 		neuralNet.calculate();
 		double output[] = neuralNet.getOutput();
-		System.out.println(output[0] + " " + output[1] + " " + output[2] + " " + output[3]);
+		// System.out.println(output[0] + " " + output[1] + " " + output[2] + " " +
+		// output[3]);
 
 		if (output[0] > 0.600) {
 			moveForward();
@@ -106,9 +139,6 @@ public class Bot extends Tank {
 			moveOneStepDefault();
 		} else if (type == BotType.NNET) {
 			moveOneStepNNet(world, neuralNet);
-		}
-		if (getBody().getLinearVelocity().length() < 0.01) {
-			getBody().setTransform(getBody().getPosition(), (float) (Math.random() * Math.PI * 2));
 		}
 	}
 

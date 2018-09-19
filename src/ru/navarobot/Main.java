@@ -94,7 +94,7 @@ public class Main extends Application {
 		ArrayList<Entity> entityList = new ArrayList<>();
 		ArrayList<ParticleGroupWithLifeTime> particleGroupList = new ArrayList<>();
 		ArrayList<Bot> botList = new ArrayList<>();
-		ArrayList<Box> boxList = new ArrayList<>();
+		ArrayList<Rect> boxList = new ArrayList<>();
 		ArrayList<Tank> tankList = new ArrayList<>();
 		ArrayList<Ammo> ammoList = new ArrayList<>();
 		ArrayList<Missile> missileList = new ArrayList<>();
@@ -136,7 +136,7 @@ public class Main extends Application {
 			tankRed.processInput(event);
 
 			if (event.getCode() == KeyCode.R || event.getCode() == KeyCode.B || event.getCode() == KeyCode.O
-					|| event.getCode() == KeyCode.N) {
+					|| event.getCode() == KeyCode.N || event.getCode() == KeyCode.M) {
 				keyQueue.add(event.getCode());
 			}
 		});
@@ -147,7 +147,7 @@ public class Main extends Application {
 
 		setBorders(borders, world, (float) scene.getWidth(), (float) scene.getHeight(), RATIO);
 
-		addRandomBoxes(entityList, boxList, group, scene, world, frictionBox, RATIO);
+		addRandomRects(entityList, boxList, group, scene, world, frictionBox, RATIO);
 
 		world.setParticleRadius(3 * RATIO);
 
@@ -232,6 +232,7 @@ public class Main extends Application {
 		new AnimationTimer() {
 			long time = System.currentTimeMillis();
 			boolean botBattle = false;
+			boolean superBots = false;
 
 			@Override
 			public void handle(long now) {
@@ -239,14 +240,17 @@ public class Main extends Application {
 
 				KeyCode keyCode = keyQueue.poll();
 				if (keyCode == KeyCode.R) {
-					tankRed.restart(Images.TANKRED.image);
-					tankGreen.restart(Images.TANKGREEN.image);
-					tankBlue.restart(Images.TANKBLUE.image);
-					for (Box box : boxList) {
+					tankRed.restart(Images.TANKRED.image, (float) (Math.random() * canvas.getWidth() * RATIO),
+							(float) (Math.random() * canvas.getHeight() * RATIO));
+					tankGreen.restart(Images.TANKGREEN.image, (float) (Math.random() * canvas.getWidth() * RATIO),
+							(float) (Math.random() * canvas.getHeight() * RATIO));
+					tankBlue.restart(Images.TANKBLUE.image, (float) (Math.random() * canvas.getWidth() * RATIO),
+							(float) (Math.random() * canvas.getHeight() * RATIO));
+					for (Rect box : boxList) {
 						box.destroy(entityList, group, world);
 					}
 					boxList.clear();
-					addRandomBoxes(entityList, boxList, group, scene, world, frictionBox, RATIO);
+					addRandomRects(entityList, boxList, group, scene, world, frictionBox, RATIO);
 					for (Bot bot : botList) {
 						bot.destroy(entityList, group, world);
 						tankList.remove(bot);
@@ -255,15 +259,18 @@ public class Main extends Application {
 				} else if (keyCode == KeyCode.B) {
 					Bot bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
 							(float) (Math.random() * scene.getHeight()), Images.TANKBOT.image, world, group,
-							frictionBox, BotType.NNET, RATIO);
+							frictionBox, Math.random() > 0.5 ? BotType.NNET : BotType.DEFAULT, RATIO);
 					botList.add(bot);
 					tankList.add(bot);
 				} else if (keyCode == KeyCode.O) {
-					boxList.add(new Box(entityList, (float) (Math.random() * scene.getWidth()),
-							(float) (Math.random() * scene.getHeight()), Images.BOX.image, world, group, frictionBox,
+					boxList.add(new Rect(entityList, (float) (Math.random() * scene.getWidth()),
+							(float) (Math.random() * scene.getHeight()),
+							Math.random() > 0.5 ? Images.BOX.image : Images.WALL.image, world, group, frictionBox,
 							RATIO));
 				} else if (keyCode == KeyCode.N) {
 					botBattle = !botBattle;
+				} else if (keyCode == KeyCode.M) {
+					superBots = !superBots;
 				}
 
 				if (Math.random() < 0.005) {
@@ -284,7 +291,9 @@ public class Main extends Application {
 
 				for (Bot bot : botList) {
 					if (Math.random() < 0.3) {
-						processShoot(bot.shoot(entityList, Color.BLACK, world, group, frictionBox, botBattle, RATIO),
+						processShoot(
+								bot.shoot(entityList, Color.BLACK, world, group, frictionBox, botBattle, superBots,
+										RATIO),
 								missileList, ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world,
 								group);
 					}
@@ -563,11 +572,12 @@ public class Main extends Application {
 		}
 	}
 
-	public void addRandomBoxes(ArrayList<Entity> entityList, ArrayList<Box> boxList, Group group, Scene scene,
+	public void addRandomRects(ArrayList<Entity> entityList, ArrayList<Rect> boxList, Group group, Scene scene,
 			World world, Body frictionBox, float RATIO) {
 		for (int i = 0; i < Math.random() * 10 * (scene.getWidth() * scene.getHeight()) / (640 * 480); i++) {
-			boxList.add(new Box(entityList, (float) (Math.random() * scene.getWidth()),
-					(float) (Math.random() * scene.getHeight()), Images.BOX.image, world, group, frictionBox, RATIO));
+			boxList.add(new Rect(entityList, (float) (Math.random() * scene.getWidth()),
+					(float) (Math.random() * scene.getHeight()),
+					Math.random() > 0.5 ? Images.BOX.image : Images.WALL.image, world, group, frictionBox, RATIO));
 		}
 	}
 

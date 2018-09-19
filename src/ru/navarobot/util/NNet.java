@@ -53,7 +53,7 @@ public class NNet {
 
 		final Scanner scr;
 		try {
-			scr = new Scanner(new File("/home/anvar/Desktop/Tanks/src/res/nnet/train.dat"));
+			scr = new Scanner(new File("/home/anvar/eclipse-workspace/Tanks/train.dat"));
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

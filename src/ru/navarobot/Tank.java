@@ -70,7 +70,7 @@ public class Tank extends Entity {
 		frictionJointDef.maxTorque = 1f;
 		world.createJoint(frictionJointDef);
 
-		restart(image);
+		restart(image, x * RATIO, y * RATIO);
 	}
 
 	public double[] getSensorData(World world) {
@@ -158,7 +158,8 @@ public class Tank extends Entity {
 		ammoVelocity += impulse;
 	}
 
-	public void restart(Image image) {
+	public void restart(Image image, float x, float y) {
+		getBody().setTransform(new Vec2(x, y), 0);
 		weaponType = WeaponType.DEFAULT;
 		setDied(false);
 		getImageView().setImage(image);
@@ -193,11 +194,15 @@ public class Tank extends Entity {
 	}
 
 	public Vec2 getDirectionVector(float k, float RATIO) {
+		return getDirectionVector(getBody().getAngle(), k, RATIO);
+	}
+
+	public Vec2 getDirectionVector(float angle, float k, float RATIO) {
 		return new Vec2(
 				(float) getBody().getPosition().x
-						+ (float) (Math.cos(getBody().getAngle()) * getImageView().getImage().getWidth() * RATIO * k),
+						+ (float) (Math.cos(angle) * getImageView().getImage().getWidth() * RATIO * k),
 				(float) getBody().getPosition().y
-						+ (float) (Math.sin(getBody().getAngle()) * getImageView().getImage().getWidth() * RATIO * k));
+						+ (float) (Math.sin(angle) * getImageView().getImage().getWidth() * RATIO * k));
 	}
 
 	public Object shoot(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,

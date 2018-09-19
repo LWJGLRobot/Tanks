@@ -58,7 +58,7 @@ public class TankRedAndBlue extends Tank {
 		double[] data = getSensorData(world);
 		try {
 			PrintWriter pw = new PrintWriter(
-					new FileOutputStream(new File("/home/anvar/Desktop/Tanks/src/res/nnet/train.dat"), true));
+					new FileOutputStream(new File("/home/anvar/eclipse-worspace/Tanks/train.dat"), true));
 			for (double num : data) {
 				pw.print(num + " ");
 			}

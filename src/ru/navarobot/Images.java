@@ -24,7 +24,7 @@ public enum Images {
 	TANKBOT("tankBot.png"), BACKGROUND("background.png"), CURSOR("cursor.png"), BOX("box.png"),
 	FIREBOOST("fireboost.png"), TANKBOOST("tankboost.png"), MISSILEBONUS("missileBonus.png"), MISSILE("missile.png"),
 	LASER("laser.png"), SUPERLASER("superLaser.png"), BOMB("bomb.png"), BOMBBONUS("bombBonus.png"), GUM("gum.png"),
-	REFLECTIONLASER("reflectionLaser.png"), HEALTH("health.png"), SUN("sun.png");
+	REFLECTIONLASER("reflectionLaser.png"), HEALTH("health.png"), SUN("sun.png"), WALL("wall.png");
 
 	public final Image image;
 
