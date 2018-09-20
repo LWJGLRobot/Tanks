@@ -155,17 +155,12 @@ public class Main extends Application {
 		group.getChildren().add(canvas);
 
 		primaryStage.widthProperty().addListener((event, numOld, numNew) -> {
-			setBorders(borders, world, (float) scene.getWidth(), (float) scene.getHeight(), RATIO);
+			setBorders(borders, world, (float) (double) numNew, (float) scene.getHeight(), RATIO);
 			canvas.setWidth(scene.getWidth());
 		});
 
 		primaryStage.heightProperty().addListener((event, numOld, numNew) -> {
-			setBorders(borders, world, (float) scene.getWidth(), (float) scene.getHeight(), RATIO);
-			canvas.setHeight(scene.getHeight());
-		});
-
-		primaryStage.fullScreenProperty().addListener((event, old, newBool) -> {
-			setBorders(borders, world, (float) scene.getWidth(), (float) scene.getHeight(), RATIO);
+			setBorders(borders, world, (float) scene.getWidth(), (float) (double) numNew, RATIO);
 			canvas.setHeight(scene.getHeight());
 		});
 
@@ -282,16 +277,16 @@ public class Main extends Application {
 							bonusTypes[new Random().nextInt(bonusTypes.length)], RATIO);
 				}
 
-				processShoot(tankRed.shoot(entityList, Color.RED, world, group, frictionBox, RATIO), missileList,
+				processShot(tankRed.shoot(entityList, Color.RED, world, group, frictionBox, RATIO), missileList,
 						ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world, group);
-				processShoot(tankGreen.shoot(entityList, Color.GREEN, world, group, frictionBox, RATIO), missileList,
+				processShot(tankGreen.shoot(entityList, Color.GREEN, world, group, frictionBox, RATIO), missileList,
 						ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world, group);
-				processShoot(tankBlue.shoot(entityList, Color.BLUE, world, group, frictionBox, RATIO), missileList,
+				processShot(tankBlue.shoot(entityList, Color.BLUE, world, group, frictionBox, RATIO), missileList,
 						ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world, group);
 
 				for (Bot bot : botList) {
 					if (Math.random() < 0.3) {
-						processShoot(
+						processShot(
 								bot.shoot(entityList, Color.BLACK, world, group, frictionBox, botBattle, superBots,
 										RATIO),
 								missileList, ammoList, laserList, particleGroupList, bombList, flashList, RATIO, world,
@@ -373,7 +368,7 @@ public class Main extends Application {
 					missile.moveOneStep(tankList);
 				}
 
-				world.step((System.currentTimeMillis() - time) / 1000f, 10, 10);
+				world.step((System.currentTimeMillis() - time) / 1000f, 20, 20);
 				time = System.currentTimeMillis();
 
 				while (!contactDataQueue.isEmpty()) {
@@ -446,7 +441,7 @@ public class Main extends Application {
 		Audio.GAMESTART.play();
 	}
 
-	public void processShoot(Object object, ArrayList<Missile> missileList, ArrayList<Ammo> ammoList,
+	public void processShot(Object object, ArrayList<Missile> missileList, ArrayList<Ammo> ammoList,
 			ArrayList<Laser> laserList, ArrayList<ParticleGroupWithLifeTime> particleGroupList,
 			ArrayList<Bomb> bombList, ArrayList<Flash> flashList, float RATIO, World world, Group group) {
 		if (object instanceof Missile) {
@@ -512,7 +507,7 @@ public class Main extends Application {
 			if (bodyB.getUserData() instanceof Tank) {
 				Audio.BOOM.play();
 				if (((Tank) bodyB.getUserData()).damage(1)) {
-					if (bullet.getTank() != null) {
+					if (bullet.getTank() != null && ((Tank) bodyB.getUserData()) != bullet.getTank()) {
 						bullet.getTank().increaseScore();
 					}
 				}
