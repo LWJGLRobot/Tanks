@@ -20,6 +20,8 @@ package ru.navarobot;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
@@ -154,14 +156,26 @@ public class Main extends Application {
 		Canvas canvas = new Canvas(640, 480);
 		group.getChildren().add(canvas);
 
+		boolean[] resize = new boolean[] { false };
+
 		primaryStage.widthProperty().addListener((event, numOld, numNew) -> {
-			setBorders(borders, world, (float) (double) numNew, (float) scene.getHeight(), RATIO);
-			canvas.setWidth(scene.getWidth());
+			new Timer(true).schedule(new TimerTask() {
+
+				@Override
+				public void run() {
+					resize[0] = true;
+				}
+			}, 100);
 		});
 
 		primaryStage.heightProperty().addListener((event, numOld, numNew) -> {
-			setBorders(borders, world, (float) scene.getWidth(), (float) (double) numNew, RATIO);
-			canvas.setHeight(scene.getHeight());
+			new Timer(true).schedule(new TimerTask() {
+
+				@Override
+				public void run() {
+					resize[0] = true;
+				}
+			}, 100);
 		});
 
 		ArrayDeque<Object> contactDataQueue = new ArrayDeque<>();
@@ -234,38 +248,40 @@ public class Main extends Application {
 				canvas.getGraphicsContext2D().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
 				KeyCode keyCode = keyQueue.poll();
-				if (keyCode == KeyCode.R) {
-					tankRed.restart(Images.TANKRED.image, (float) (Math.random() * canvas.getWidth() * RATIO),
-							(float) (Math.random() * canvas.getHeight() * RATIO));
-					tankGreen.restart(Images.TANKGREEN.image, (float) (Math.random() * canvas.getWidth() * RATIO),
-							(float) (Math.random() * canvas.getHeight() * RATIO));
-					tankBlue.restart(Images.TANKBLUE.image, (float) (Math.random() * canvas.getWidth() * RATIO),
-							(float) (Math.random() * canvas.getHeight() * RATIO));
-					for (Rect box : boxList) {
-						box.destroy(entityList, group, world);
+				if (keyCode != null) {
+					if (keyCode == KeyCode.R) {
+						tankRed.restart(Images.TANKRED.image, (float) (Math.random() * canvas.getWidth() * RATIO),
+								(float) (Math.random() * canvas.getHeight() * RATIO));
+						tankGreen.restart(Images.TANKGREEN.image, (float) (Math.random() * canvas.getWidth() * RATIO),
+								(float) (Math.random() * canvas.getHeight() * RATIO));
+						tankBlue.restart(Images.TANKBLUE.image, (float) (Math.random() * canvas.getWidth() * RATIO),
+								(float) (Math.random() * canvas.getHeight() * RATIO));
+						for (Rect box : boxList) {
+							box.destroy(entityList, group, world);
+						}
+						boxList.clear();
+						addRandomRects(entityList, boxList, group, scene, world, frictionBox, RATIO);
+						for (Bot bot : botList) {
+							bot.destroy(entityList, group, world);
+							tankList.remove(bot);
+						}
+						botList.clear();
+					} else if (keyCode == KeyCode.B) {
+						Bot bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
+								(float) (Math.random() * scene.getHeight()), Images.TANKBOT.image, world, group,
+								frictionBox, Math.random() > 0.5 ? BotType.NNET : BotType.DEFAULT, RATIO);
+						botList.add(bot);
+						tankList.add(bot);
+					} else if (keyCode == KeyCode.O) {
+						boxList.add(new Rect(entityList, (float) (Math.random() * scene.getWidth()),
+								(float) (Math.random() * scene.getHeight()),
+								Math.random() > 0.5 ? Images.BOX.image : Images.WALL.image, world, group, frictionBox,
+								RATIO));
+					} else if (keyCode == KeyCode.N) {
+						botBattle = !botBattle;
+					} else if (keyCode == KeyCode.M) {
+						superBots = !superBots;
 					}
-					boxList.clear();
-					addRandomRects(entityList, boxList, group, scene, world, frictionBox, RATIO);
-					for (Bot bot : botList) {
-						bot.destroy(entityList, group, world);
-						tankList.remove(bot);
-					}
-					botList.clear();
-				} else if (keyCode == KeyCode.B) {
-					Bot bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
-							(float) (Math.random() * scene.getHeight()), Images.TANKBOT.image, world, group,
-							frictionBox, Math.random() > 0.5 ? BotType.NNET : BotType.DEFAULT, RATIO);
-					botList.add(bot);
-					tankList.add(bot);
-				} else if (keyCode == KeyCode.O) {
-					boxList.add(new Rect(entityList, (float) (Math.random() * scene.getWidth()),
-							(float) (Math.random() * scene.getHeight()),
-							Math.random() > 0.5 ? Images.BOX.image : Images.WALL.image, world, group, frictionBox,
-							RATIO));
-				} else if (keyCode == KeyCode.N) {
-					botBattle = !botBattle;
-				} else if (keyCode == KeyCode.M) {
-					superBots = !superBots;
 				}
 
 				if (Math.random() < 0.005) {
@@ -426,6 +442,13 @@ public class Main extends Application {
 								flash.getBody().getPosition().y / RATIO, realEnd.x / RATIO, realEnd.y / RATIO);
 					}
 				}
+
+				if (resize[0]) {
+					setBorders(borders, world, (float) scene.getWidth(), (float) scene.getHeight(), RATIO);
+					canvas.setWidth(scene.getWidth());
+					canvas.setHeight(scene.getHeight());
+					resize[0] = false;
+				}
 			}
 		}.start();
 
@@ -577,16 +600,20 @@ public class Main extends Application {
 	}
 
 	public void setBorders(Entity[] borders, World world, float width, float height, float RATIO) {
+		setBordersOnce(borders, world, width, height, RATIO);
+		// bug fix
+		setBordersOnce(borders, world, width, height, RATIO);
+	}
+
+	public void setBordersOnce(Entity[] borders, World world, float width, float height, float RATIO) {
 		borders[0].getBody().setTransform(new Vec2(width * RATIO / 2, 0), 0);
-		((PolygonShape) (borders[0].getBody().getFixtureList().getShape())).setAsBox(width * RATIO / 2, 10 * RATIO);
-
 		borders[1].getBody().setTransform(new Vec2(0, height * RATIO / 2), 0);
-		((PolygonShape) (borders[1].getBody().getFixtureList().getShape())).setAsBox(10 * RATIO, height * RATIO / 2);
-
 		borders[2].getBody().setTransform(new Vec2(width * RATIO / 2, height * RATIO), 0);
-		((PolygonShape) (borders[2].getBody().getFixtureList().getShape())).setAsBox(width * RATIO / 2, 10 * RATIO);
-
 		borders[3].getBody().setTransform(new Vec2(width * RATIO, height * RATIO / 2), 0);
+
+		((PolygonShape) (borders[0].getBody().getFixtureList().getShape())).setAsBox(width * RATIO / 2, 10 * RATIO);
+		((PolygonShape) (borders[1].getBody().getFixtureList().getShape())).setAsBox(10 * RATIO, height * RATIO / 2);
+		((PolygonShape) (borders[2].getBody().getFixtureList().getShape())).setAsBox(width * RATIO / 2, 10 * RATIO);
 		((PolygonShape) (borders[3].getBody().getFixtureList().getShape())).setAsBox(10 * RATIO, height * RATIO / 2);
 	}
 
