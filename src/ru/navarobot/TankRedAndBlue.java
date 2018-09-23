@@ -40,7 +40,7 @@ public class TankRedAndBlue extends Tank {
 
 	public TankRedAndBlue(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group,
 			Body frictionBox, float RATIO, KeyCode[] keylayout) {
-		super(entityList, x, y, image, world, group, frictionBox, RATIO);
+		super(entityList, x, y, image, world, group, frictionBox, 1, 1, 20, 30, RATIO);
 
 		getBody().setUserData(this);
 

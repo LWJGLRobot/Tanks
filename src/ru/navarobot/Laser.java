@@ -56,7 +56,7 @@ public class Laser {
 		}
 	}
 
-	public void shootSuperLaser(World world, Vec2 start, Vec2 end) {
+	public void shootSuperLaser(World world, Vec2 start, Vec2 end, float RATIO) {
 		Fixture[] closestFixture = new Fixture[1];
 		boolean[] tankFound = new boolean[1];
 		Vec2[] closestPoint = new Vec2[1];
@@ -81,15 +81,15 @@ public class Laser {
 			}
 		}, start, end);
 		if (closestFixture[0].getBody().getUserData() instanceof Tank) {
-			((Tank) closestFixture[0].getBody().getUserData()).damage(10);
+			((Tank) closestFixture[0].getBody().getUserData()).damage(10, RATIO);
 		}
 		pointList.add(start);
 		pointList.add(closestPoint[0]);
 	}
 
-	public void shootReflectionLaser(World world, Vec2 start, Vec2 end, float length) {
+	public void shootReflectionLaser(World world, Vec2 start, Vec2 end, float length, float RATIO) {
 		while (true) {
-			end = shootLaser(world, start, end);
+			end = shootLaser(world, start, end, RATIO);
 			if (end == null) {
 				break;
 			}
@@ -103,7 +103,7 @@ public class Laser {
 		}
 	}
 
-	public Vec2 shootLaser(World world, Vec2 start, Vec2 end) {
+	public Vec2 shootLaser(World world, Vec2 start, Vec2 end, float RATIO) {
 		Fixture[] closestFixture = new Fixture[1];
 		Vec2[] closestPoint = new Vec2[1];
 		Vec2[] normalVector = new Vec2[1];
@@ -127,7 +127,7 @@ public class Laser {
 		pointList.add(start);
 		pointList.add(closestPoint[0]);
 		if (closestFixture[0].getBody().getUserData() instanceof Tank) {
-			((Tank) closestFixture[0].getBody().getUserData()).damage(7);
+			((Tank) closestFixture[0].getBody().getUserData()).damage(7, RATIO);
 			return null;
 		}
 		// e-2(E*n)n
@@ -136,11 +136,11 @@ public class Laser {
 
 	public void shoot(World world, Vec2 start, Vec2 end, float RATIO) {
 		if (type == LaserType.LASER) {
-			shootLaser(world, start, end);
+			shootLaser(world, start, end, RATIO);
 		} else if (type == LaserType.SUPERLASER) {
-			shootSuperLaser(world, start, end);
+			shootSuperLaser(world, start, end, RATIO);
 		} else if (type == LaserType.REFLECTIONLASER) {
-			shootReflectionLaser(world, start, end, 20);
+			shootReflectionLaser(world, start, end, 20, RATIO);
 		}
 	}
 }

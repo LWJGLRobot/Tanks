@@ -27,6 +27,7 @@ import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.Fixture;
 import org.jbox2d.dynamics.World;
+import org.jbox2d.dynamics.joints.FrictionJoint;
 import org.jbox2d.dynamics.joints.FrictionJointDef;
 import org.jbox2d.particle.ParticleGroupType;
 import org.jbox2d.particle.ParticleType;
@@ -46,9 +47,16 @@ public class Tank extends Entity {
 	private float ammoVelocity;
 	private int score;
 	private WeaponType weaponType;
+	private FrictionJoint frictionJoint;
+
+	public int DEFAULT_HEALTH;
+	public double TEXT_OFFSET;
 
 	public Tank(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group, Body frictionBox,
-			float RATIO) {
+			float jointForce, float jointTorque, int defaultHealth, double textOffset, float RATIO) {
+
+		DEFAULT_HEALTH = defaultHealth;
+		TEXT_OFFSET = textOffset;
 
 		text = new Text();
 		group.getChildren().add(text);
@@ -64,13 +72,20 @@ public class Tank extends Entity {
 
 		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 1, 0.5f, false, group, 0, RATIO);
 
+		getBody().setAngularDamping(0.5f);
+		getBody().setLinearDamping(0.3f);
+
 		FrictionJointDef frictionJointDef = new FrictionJointDef();
 		frictionJointDef.initialize(getBody(), frictionBox, getBody().getPosition());
-		frictionJointDef.maxForce = 1f;
-		frictionJointDef.maxTorque = 1f;
-		world.createJoint(frictionJointDef);
+		frictionJointDef.maxForce = jointForce;
+		frictionJointDef.maxTorque = jointTorque;
+		frictionJoint = (FrictionJoint) world.createJoint(frictionJointDef);
 
 		restart(image, x * RATIO, y * RATIO);
+	}
+
+	public FrictionJoint getFrictionJoint() {
+		return frictionJoint;
 	}
 
 	public double[] getSensorData(World world) {
@@ -166,7 +181,7 @@ public class Tank extends Entity {
 		force = 1.3f;
 		torque = 1.05f;
 		ammoVelocity = 5f;
-		health = 20;
+		health = DEFAULT_HEALTH;
 		updateText();
 	}
 
@@ -182,12 +197,15 @@ public class Tank extends Entity {
 		return text;
 	}
 
-	public boolean damage(int damage) {
+	public boolean damage(int damage, float RATIO) {
 		health -= damage;
 		updateText();
 		if (health < 0 && !died) {
 			died = true;
 			getImageView().setImage(Images.POOP.image);
+			((PolygonShape) getBody().getFixtureList().getShape()).setAsBox(
+					(float) Images.POOP.image.getWidth() * RATIO / 2,
+					(float) Images.POOP.image.getHeight() * RATIO / 2);
 			return true;
 		}
 		return false;
@@ -246,6 +264,9 @@ public class Tank extends Entity {
 		} else if (weaponType == WeaponType.FLASH) {
 			Audio.POP.play();
 			object = flashLight(entityList, Color.WHITE, world, group, frictionBox, 1, RATIO);
+		} else if (weaponType == WeaponType.BIGBULLET) {
+			Audio.POP.play();
+			object = shootBigBullet(entityList, color, world, group, frictionBox, 0, RATIO);
 		}
 		weaponType = WeaponType.DEFAULT;
 		return object;
@@ -295,6 +316,18 @@ public class Tank extends Entity {
 		return missile;
 	}
 
+	public Bullet shootBigBullet(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
+			float restitution, float RATIO) {
+		if (died)
+			return null;
+		Vec2 bulletPosition = getDirectionVector(0.7f, RATIO);
+		Bullet bullet = new Bullet(entityList, this, bulletPosition.x / RATIO, bulletPosition.y / RATIO,
+				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
+						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
+				color, world, group, frictionBox, restitution, 10, true, RATIO);
+		return bullet;
+	}
+
 	public Bullet shootBullet(ArrayList<Entity> entityList, Color color, World world, Group group, Body frictionBox,
 			float restitution, float RATIO) {
 		if (died)
@@ -303,13 +336,13 @@ public class Tank extends Entity {
 		Bullet bullet = new Bullet(entityList, this, bulletPosition.x / RATIO, bulletPosition.y / RATIO,
 				new Vec2((float) (Math.cos(getBody().getAngle()) * ammoVelocity),
 						(float) (Math.sin(getBody().getAngle()) * ammoVelocity)).add(getBody().getLinearVelocity()),
-				color, world, group, frictionBox, restitution, 5, RATIO);
+				color, world, group, frictionBox, restitution, 5, false, RATIO);
 		return bullet;
 	}
 
 	public void updatePositionAndAngle(float RATIO) {
 		text.setX(getBody().getPosition().x / RATIO);
-		text.setY(getBody().getPosition().y / RATIO - 30);
+		text.setY(getBody().getPosition().y / RATIO - TEXT_OFFSET);
 
 		getImageView().setX(getBody().getPosition().x / RATIO - getImageView().getImage().getWidth() / 2);
 		getImageView().setY(getBody().getPosition().y / RATIO - getImageView().getImage().getHeight() / 2);
@@ -320,16 +353,32 @@ public class Tank extends Entity {
 		rotate(-torque);
 	}
 
+	public void rotateLeft(float mul) {
+		rotate(-torque * mul);
+	}
+
 	public void rotateRight() {
 		rotate(torque);
+	}
+
+	public void rotateRight(float mul) {
+		rotate(torque * mul);
 	}
 
 	public void moveForward() {
 		move(force);
 	}
 
+	public void moveForward(float mul) {
+		move(force * mul);
+	}
+
 	public void moveBackward() {
 		move(-force);
+	}
+
+	public void moveBackward(float mul) {
+		move(-force * mul);
 	}
 
 	public void move(float force) {
@@ -339,6 +388,7 @@ public class Tank extends Entity {
 
 	public void rotate(float torque) {
 		getBody().applyTorque(torque);
+
 	}
 
 	public ImageView getImageView() {

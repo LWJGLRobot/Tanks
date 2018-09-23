@@ -124,6 +124,10 @@ public class Main extends Application {
 			tankGreen.processInput(event);
 		});
 
+		scene.setOnMousePressed((event) -> {
+			tankGreen.processInput(event);
+		});
+
 		scene.setOnMouseClicked((event) -> {
 			tankGreen.processInput(event);
 		});
@@ -267,9 +271,17 @@ public class Main extends Application {
 						}
 						botList.clear();
 					} else if (keyCode == KeyCode.B) {
-						Bot bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
-								(float) (Math.random() * scene.getHeight()), Images.TANKBOT.image, world, group,
-								frictionBox, Math.random() > 0.5 ? BotType.NNET : BotType.DEFAULT, RATIO);
+						Bot bot;
+						if (Math.random() < 0.1 ) {
+							bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
+									(float) (Math.random() * scene.getHeight()), Images.BOSS.image, world, group,
+									frictionBox, BotType.DEFAULT, 2, 2, 200, 60, true, RATIO);
+						} else {
+							bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
+									(float) (Math.random() * scene.getHeight()), Images.TANKBOT.image, world, group,
+									frictionBox, Math.random() > 0.5 ? BotType.NNET : BotType.DEFAULT, 1, 1, 20, 30,
+									false, RATIO);
+						}
 						botList.add(bot);
 						tankList.add(bot);
 					} else if (keyCode == KeyCode.O) {
@@ -497,7 +509,7 @@ public class Main extends Application {
 			ammoList.add(new Bullet(entityList, null, (bomb.getBody().getPosition().x + localPosition.x) / RATIO,
 					(bomb.getBody().getPosition().y + localPosition.y) / RATIO,
 					new Vec2(rot.getCos() * 10, rot.getSin() * 10), Color.PURPLE, world, group, frictionBox, 1, 5,
-					RATIO));
+					false, RATIO));
 		}
 	}
 
@@ -515,7 +527,7 @@ public class Main extends Application {
 			Missile missile = (Missile) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
 				Audio.BOOM.play();
-				if (((Tank) bodyB.getUserData()).damage(5)) {
+				if (((Tank) bodyB.getUserData()).damage(5, RATIO)) {
 					missile.getTank().increaseScore();
 				}
 				particleGroupList.add(
@@ -529,14 +541,25 @@ public class Main extends Application {
 			Bullet bullet = (Bullet) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
 				Audio.BOOM.play();
-				if (((Tank) bodyB.getUserData()).damage(1)) {
-					if (bullet.getTank() != null && ((Tank) bodyB.getUserData()) != bullet.getTank()) {
-						bullet.getTank().increaseScore();
+				if (bullet.isBigBullet()) {
+					if (((Tank) bodyB.getUserData()).damage(5, RATIO)) {
+						if (bullet.getTank() != null && ((Tank) bodyB.getUserData()) != bullet.getTank()) {
+							bullet.getTank().increaseScore();
+						}
 					}
+					particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK,
+							10, RATIO, world, group, ParticleType.b2_powderParticle,
+							ParticleGroupType.b2_solidParticleGroup, 10000));
+				} else {
+					if (((Tank) bodyB.getUserData()).damage(1, RATIO)) {
+						if (bullet.getTank() != null && ((Tank) bodyB.getUserData()) != bullet.getTank()) {
+							bullet.getTank().increaseScore();
+						}
+					}
+					particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK,
+							5, RATIO, world, group, ParticleType.b2_powderParticle,
+							ParticleGroupType.b2_solidParticleGroup, 10000));
 				}
-				particleGroupList.add(
-						new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 5, RATIO, world,
-								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 10000));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
 			} else if (bodyA.getFixtureList().getRestitution() == 0) {
@@ -550,7 +573,7 @@ public class Main extends Application {
 			Bomb bomb = (Bomb) bodyA.getUserData();
 			if (bodyB.getUserData() instanceof Tank) {
 				Audio.BOOM.play();
-				if (((Tank) bodyB.getUserData()).damage(10)) {
+				if (((Tank) bodyB.getUserData()).damage(10, RATIO)) {
 					bomb.getTank().increaseScore();
 				}
 				createBoom(ammoList, bomb, entityList, world, group, frictionBox, RATIO);

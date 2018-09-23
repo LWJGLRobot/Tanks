@@ -31,9 +31,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 public class Bullet extends Ammo {
+	
+	private boolean bigBullet;
 
 	public Bullet(ArrayList<Entity> entityList, Tank tank, float x, float y, Vec2 velocity, Color color, World world,
-			Group group, Body frictionBox, float restitution, float radius, float RATIO) {
+			Group group, Body frictionBox, float restitution, float radius, boolean bigBullet, float RATIO) {
+		
+		this.bigBullet = bigBullet;
 
 		Circle circle = new Circle(x, y, radius, color);
 
@@ -54,6 +58,10 @@ public class Bullet extends Ammo {
 		getBody().applyLinearImpulse(velocity.mul(getBody().getMass()), getBody().getPosition(), true);
 
 		initAmmo(tank);
+	}
+
+	public boolean isBigBullet() {
+		return bigBullet;
 	}
 
 	public void updatePositionAndAngle(float RATIO) {

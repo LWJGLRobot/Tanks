@@ -15,8 +15,10 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  ******************************************************************************/
-package ru.navarobot;
+package ru.navarobot.util;
 
-public enum WeaponType {
-	DEFAULT, MISSILE, FIRE, LASER, SOFTBULLET, SUPERLASER, BOMB, REFLECTIONLASER, DEFEND, FLASH, BIGBULLET;
+public class Utils {
+	
+	
+	
 }

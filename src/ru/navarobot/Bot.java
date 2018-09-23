@@ -39,10 +39,14 @@ public class Bot extends Tank {
 	private boolean rotate;
 	private boolean move;
 	private BotType type;
+	private boolean boss;
 
 	public Bot(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group, Body frictionBox,
-			BotType type, float RATIO) {
-		super(entityList, x, y, image, world, group, frictionBox, RATIO);
+			BotType type, float frictionForce, float frictionTorque, int defaultHealth, double defaultOffset,
+			boolean boss, float RATIO) {
+		super(entityList, x, y, image, world, group, frictionBox, frictionForce, frictionTorque, defaultHealth,
+				defaultOffset, RATIO);
+		this.boss = boss;
 		getBody().setUserData(this);
 		move = true;
 		this.type = type;
@@ -72,6 +76,9 @@ public class Bot extends Tank {
 								|| closestFixture[0].getBody().getUserData() instanceof TankGreen)
 						&& !((Tank) closestFixture[0].getBody().getUserData()).isDied()) {
 					getBody().setTransform(getBody().getPosition(), (float) i);
+					if(boss) {
+						setWeaponType(WeaponType.BIGBULLET);
+					}
 					return super.shoot(entityList, color, world, group, frictionBox, RATIO);
 				}
 			}
@@ -95,6 +102,9 @@ public class Bot extends Tank {
 							|| closestFixture[0].getBody().getUserData() instanceof TankRedAndBlue
 							|| closestFixture[0].getBody().getUserData() instanceof TankGreen)
 					&& !((Tank) closestFixture[0].getBody().getUserData()).isDied()) {
+				if(boss) {
+					setWeaponType(WeaponType.BIGBULLET);
+				}
 				return super.shoot(entityList, color, world, group, frictionBox, RATIO);
 			} else {
 				return null;
@@ -150,14 +160,30 @@ public class Bot extends Tank {
 			move = !move;
 		}
 		if (rotate) {
-			rotateLeft();
+			if (!boss) {
+				rotateLeft();
+			} else {
+				rotateLeft(3);
+			}
 		} else {
-			rotateRight();
+			if (!boss) {
+				rotateRight();
+			} else {
+				rotateRight(3);
+			}
 		}
 		if (move) {
-			moveForward();
+			if (!boss) {
+				moveForward();
+			} else {
+				moveForward(3);
+			}
 		} else {
-			moveBackward();
+			if (!boss) {
+				moveBackward();
+			} else {
+				moveBackward(3);
+			}
 		}
 	}
 

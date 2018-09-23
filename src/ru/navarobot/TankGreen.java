@@ -32,11 +32,14 @@ public class TankGreen extends Tank {
 
 	private float destPosition[];
 	private boolean isShooting;
+	private boolean moveBackward;
 
 	public TankGreen(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group,
 			Body frictionBox, float RATIO) {
-		super(entityList, x, y, image, world, group, frictionBox, RATIO);
+		super(entityList, x, y, image, world, group, frictionBox, 1, 1, 20, 30, RATIO);
+
 		getBody().setUserData(this);
+
 		destPosition = new float[2];
 	}
 
@@ -55,10 +58,20 @@ public class TankGreen extends Tank {
 			return;
 		if (Math.abs(destPosition[0] - getBody().getPosition().x / RATIO) > getImageView().getImage().getWidth() || Math
 				.abs(destPosition[1] - getBody().getPosition().y / RATIO) > getImageView().getImage().getWidth()) {
-			getBody().setTransform(getBody().getPosition(),
-					(float) Math.atan2(destPosition[1] - getBody().getPosition().y / RATIO,
-							destPosition[0] - getBody().getPosition().x / RATIO));
-			moveForward();
+			float newAngle = (float) Math.atan2(destPosition[1] - getBody().getPosition().y / RATIO,
+					destPosition[0] - getBody().getPosition().x / RATIO);
+			float diff = (float) Math.atan2(Math.sin(newAngle - getBody().getAngle()),
+					Math.cos(newAngle - getBody().getAngle()));
+			if (diff > 0) {
+				rotateRight();
+			} else {
+				rotateLeft();
+			}
+			if (!moveBackward) {
+				moveForward();
+			} else {
+				moveBackward();
+			}
 		}
 	}
 
@@ -66,10 +79,16 @@ public class TankGreen extends Tank {
 		if (event.getEventType() == MouseEvent.MOUSE_CLICKED) {
 			if (event.getButton() == MouseButton.PRIMARY) {
 				setShooting(true);
+			} else if (event.getButton() == MouseButton.SECONDARY) {
+				moveBackward = false;
 			}
 		} else if (event.getEventType() == MouseEvent.MOUSE_MOVED) {
 			destPosition[0] = (float) event.getSceneX();
 			destPosition[1] = (float) event.getSceneY();
+		} else if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
+			if (event.getButton() == MouseButton.SECONDARY) {
+				moveBackward = true;
+			}
 		}
 	}
 
