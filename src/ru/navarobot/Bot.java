@@ -43,9 +43,9 @@ public class Bot extends Tank {
 
 	public Bot(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group, Body frictionBox,
 			BotType type, float frictionForce, float frictionTorque, int defaultHealth, double defaultOffset,
-			boolean boss, float RATIO) {
+			boolean boss, float scale, float RATIO) {
 		super(entityList, x, y, image, world, group, frictionBox, frictionForce, frictionTorque, defaultHealth,
-				defaultOffset, RATIO);
+				defaultOffset, scale, RATIO);
 		this.boss = boss;
 		getBody().setUserData(this);
 		move = true;
@@ -76,7 +76,7 @@ public class Bot extends Tank {
 								|| closestFixture[0].getBody().getUserData() instanceof TankGreen)
 						&& !((Tank) closestFixture[0].getBody().getUserData()).isDied()) {
 					getBody().setTransform(getBody().getPosition(), (float) i);
-					if(boss) {
+					if (boss) {
 						setWeaponType(WeaponType.BIGBULLET);
 					}
 					return super.shoot(entityList, color, world, group, frictionBox, RATIO);
@@ -102,7 +102,7 @@ public class Bot extends Tank {
 							|| closestFixture[0].getBody().getUserData() instanceof TankRedAndBlue
 							|| closestFixture[0].getBody().getUserData() instanceof TankGreen)
 					&& !((Tank) closestFixture[0].getBody().getUserData()).isDied()) {
-				if(boss) {
+				if (boss) {
 					setWeaponType(WeaponType.BIGBULLET);
 				}
 				return super.shoot(entityList, color, world, group, frictionBox, RATIO);

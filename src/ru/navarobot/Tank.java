@@ -53,22 +53,25 @@ public class Tank extends Entity {
 	public double TEXT_OFFSET;
 
 	public Tank(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group, Body frictionBox,
-			float jointForce, float jointTorque, int defaultHealth, double textOffset, float RATIO) {
+			float jointForce, float jointTorque, int defaultHealth, double textOffset, float scale, float RATIO) {
 
 		DEFAULT_HEALTH = defaultHealth;
 		TEXT_OFFSET = textOffset;
 
 		text = new Text();
+		text.setFill(Color.RED);
 		group.getChildren().add(text);
 
 		ImageView imageView = new ImageView();
 		imageView.setX(x - image.getWidth() / 2);
 		imageView.setY(y - image.getHeight() / 2);
+		imageView.setScaleY(scale);
+		imageView.setScaleX(scale);
 		imageView.setCache(true);
 		imageView.setSmooth(true);
 
 		PolygonShape shape = new PolygonShape();
-		shape.setAsBox((float) image.getWidth() * RATIO / 2, (float) image.getHeight() * RATIO / 2);
+		shape.setAsBox((float) image.getWidth() * scale * RATIO / 2, (float) image.getHeight() * scale * RATIO / 2);
 
 		initEntity(entityList, imageView, BodyType.DYNAMIC, x, y, world, shape, 1, 0.5f, false, group, 0, RATIO);
 
@@ -179,7 +182,7 @@ public class Tank extends Entity {
 		setDied(false);
 		getImageView().setImage(image);
 		force = 1.3f;
-		torque = 1.05f;
+		torque = 1.02f;
 		ammoVelocity = 5f;
 		health = DEFAULT_HEALTH;
 		updateText();
@@ -204,8 +207,8 @@ public class Tank extends Entity {
 			died = true;
 			getImageView().setImage(Images.POOP.image);
 			((PolygonShape) getBody().getFixtureList().getShape()).setAsBox(
-					(float) Images.POOP.image.getWidth() * RATIO / 2,
-					(float) Images.POOP.image.getHeight() * RATIO / 2);
+					(float) (Images.POOP.image.getWidth() * getImageView().getScaleX() * RATIO / 2),
+					(float) (Images.POOP.image.getHeight() * getImageView().getScaleY() * RATIO / 2));
 			return true;
 		}
 		return false;

@@ -272,15 +272,15 @@ public class Main extends Application {
 						botList.clear();
 					} else if (keyCode == KeyCode.B) {
 						Bot bot;
-						if (Math.random() < 0.1 ) {
+						if (Math.random() < 0.1) {
 							bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
 									(float) (Math.random() * scene.getHeight()), Images.BOSS.image, world, group,
-									frictionBox, BotType.DEFAULT, 2, 2, 200, 60, true, RATIO);
+									frictionBox, BotType.DEFAULT, 2, 2, 200, 60, true, 1, RATIO);
 						} else {
 							bot = new Bot(entityList, (float) (Math.random() * scene.getWidth()),
 									(float) (Math.random() * scene.getHeight()), Images.TANKBOT.image, world, group,
 									frictionBox, Math.random() > 0.5 ? BotType.NNET : BotType.DEFAULT, 1, 1, 20, 30,
-									false, RATIO);
+									false, 0.5f, RATIO);
 						}
 						botList.add(bot);
 						tankList.add(bot);
@@ -489,7 +489,7 @@ public class Main extends Application {
 			particleGroupList.add(new ParticleGroupWithLifeTime(
 					((Laser) object).getPointList().get(((Laser) object).getPointList().size() - 1), new Vec2(), 5,
 					Color.BLACK, 10, RATIO, world, group, ParticleType.b2_powderParticle,
-					ParticleGroupType.b2_solidParticleGroup, 10000));
+					ParticleGroupType.b2_solidParticleGroup, 3000));
 		} else if (object instanceof ParticleGroupWithLifeTime) {
 			particleGroupList.add((ParticleGroupWithLifeTime) object);
 		} else if (object instanceof Bomb) {
@@ -532,7 +532,7 @@ public class Main extends Application {
 				}
 				particleGroupList.add(
 						new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 10, RATIO, world,
-								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 10000));
+								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 3000));
 				missile.destroy(entityList, group, world);
 				ammoList.remove(missile);
 				missileList.remove(missile);
@@ -549,7 +549,7 @@ public class Main extends Application {
 					}
 					particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK,
 							10, RATIO, world, group, ParticleType.b2_powderParticle,
-							ParticleGroupType.b2_solidParticleGroup, 10000));
+							ParticleGroupType.b2_solidParticleGroup, 3000));
 				} else {
 					if (((Tank) bodyB.getUserData()).damage(1, RATIO)) {
 						if (bullet.getTank() != null && ((Tank) bodyB.getUserData()) != bullet.getTank()) {
@@ -558,14 +558,14 @@ public class Main extends Application {
 					}
 					particleGroupList.add(new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK,
 							5, RATIO, world, group, ParticleType.b2_powderParticle,
-							ParticleGroupType.b2_solidParticleGroup, 10000));
+							ParticleGroupType.b2_solidParticleGroup, 3000));
 				}
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
 			} else if (bodyA.getFixtureList().getRestitution() == 0) {
 				particleGroupList.add(
 						new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.BLACK, 5, RATIO, world,
-								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 10000));
+								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 3000));
 				bullet.destroy(entityList, group, world);
 				ammoList.remove(bullet);
 			}
@@ -579,7 +579,7 @@ public class Main extends Application {
 				createBoom(ammoList, bomb, entityList, world, group, frictionBox, RATIO);
 				particleGroupList.add(
 						new ParticleGroupWithLifeTime(bodyA.getPosition(), velocity, 0, Color.DARKRED, 15, RATIO, world,
-								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 10000));
+								group, ParticleType.b2_powderParticle, ParticleGroupType.b2_solidParticleGroup, 3000));
 				bomb.destroy(entityList, group, world);
 				bombList.remove(bomb);
 			}

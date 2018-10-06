@@ -36,7 +36,7 @@ public class TankGreen extends Tank {
 
 	public TankGreen(ArrayList<Entity> entityList, float x, float y, Image image, World world, Group group,
 			Body frictionBox, float RATIO) {
-		super(entityList, x, y, image, world, group, frictionBox, 1, 1, 20, 30, RATIO);
+		super(entityList, x, y, image, world, group, frictionBox, 1, 1, 20, 30, 0.5f, RATIO);
 
 		getBody().setUserData(this);
 
@@ -56,8 +56,10 @@ public class TankGreen extends Tank {
 	public void moveOneStep(float RATIO) {
 		if (isDied())
 			return;
-		if (Math.abs(destPosition[0] - getBody().getPosition().x / RATIO) > getImageView().getImage().getWidth() || Math
-				.abs(destPosition[1] - getBody().getPosition().y / RATIO) > getImageView().getImage().getWidth()) {
+		if (Math.abs(destPosition[0] - getBody().getPosition().x / RATIO) > getImageView().getImage().getWidth()
+				* getImageView().getScaleX() * 1.5
+				|| Math.abs(destPosition[1] - getBody().getPosition().y / RATIO) > getImageView().getImage().getWidth()
+						* getImageView().getScaleX() * 1.5) {
 			float newAngle = (float) Math.atan2(destPosition[1] - getBody().getPosition().y / RATIO,
 					destPosition[0] - getBody().getPosition().x / RATIO);
 			float diff = (float) Math.atan2(Math.sin(newAngle - getBody().getAngle()),
